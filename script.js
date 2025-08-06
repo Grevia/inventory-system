@@ -55,16 +55,54 @@ document.addEventListener('click', function(e) {
             // 嘗試手動觸發按鈕功能
             if (button.id === 'loginBtn') {
                 console.log('嘗試手動觸發登入功能');
-                handleLogin();
+                try {
+                    if (typeof handleLogin === 'function') {
+                        handleLogin();
+                    } else {
+                        console.error('handleLogin 函數未定義');
+                    }
+                } catch (error) {
+                    console.error('執行 handleLogin 時發生錯誤:', error);
+                }
             } else if (button.id === 'employeeEditBtn') {
                 console.log('嘗試手動觸發員工資料編輯功能');
-                showAdminAuth();
+                try {
+                    if (typeof showAdminAuth === 'function') {
+                        showAdminAuth();
+                    } else {
+                        console.error('showAdminAuth 函數未定義');
+                        if (typeof showMessage === 'function') {
+                            showMessage('系統錯誤：showAdminAuth 函數未定義');
+                        }
+                    }
+                } catch (error) {
+                    console.error('執行 showAdminAuth 時發生錯誤:', error);
+                    if (typeof showMessage === 'function') {
+                        showMessage('系統錯誤：' + error.message);
+                    }
+                }
             } else if (button.id === 'adminAuthBtn') {
                 console.log('嘗試手動觸發管理員驗證功能');
-                handleAdminAuth();
+                try {
+                    if (typeof handleAdminAuth === 'function') {
+                        handleAdminAuth();
+                    } else {
+                        console.error('handleAdminAuth 函數未定義');
+                    }
+                } catch (error) {
+                    console.error('執行 handleAdminAuth 時發生錯誤:', error);
+                }
             } else if (button.id === 'backToLoginBtn') {
                 console.log('嘗試手動觸發返回登入功能');
-                showPage('loginPage');
+                try {
+                    if (typeof showPage === 'function') {
+                        showPage('loginPage');
+                    } else {
+                        console.error('showPage 函數未定義');
+                    }
+                } catch (error) {
+                    console.error('執行 showPage 時發生錯誤:', error);
+                }
             }
         }
     }
@@ -86,6 +124,23 @@ document.addEventListener('DOMContentLoaded', function() {
 // 初始化應用程式
 function initializeApp() {
     console.log('初始化應用程式');
+    
+    // 檢查必要函數是否定義
+    const requiredFunctions = ['showPage', 'showMessage', 'showAdminAuth', 'handleLogin', 'handleAdminAuth'];
+    const missingFunctions = [];
+    
+    requiredFunctions.forEach(funcName => {
+        if (typeof window[funcName] !== 'function') {
+            missingFunctions.push(funcName);
+            console.error(`必要函數未定義: ${funcName}`);
+        }
+    });
+    
+    if (missingFunctions.length > 0) {
+        console.error('缺少必要函數:', missingFunctions);
+        alert('系統初始化失敗：缺少必要函數 - ' + missingFunctions.join(', '));
+        return;
+    }
     
     // 確保載入覆蓋層和訊息框是隱藏的
     const loadingOverlay = document.getElementById('loadingOverlay');
@@ -222,12 +277,29 @@ function setupEventListeners() {
     console.log('尋找員工資料編輯按鈕:', employeeEditBtn);
     if (employeeEditBtn) {
         try {
-            employeeEditBtn.addEventListener('click', function(e) {
+            // 移除舊的事件監聽器（如果有的話）
+            employeeEditBtn.removeEventListener('click', employeeEditBtn._clickHandler);
+            
+            // 創建新的事件處理函數
+            employeeEditBtn._clickHandler = function(e) {
                 console.log('員工資料編輯按鈕被點擊');
                 e.preventDefault();
                 e.stopPropagation();
-                showAdminAuth();
-            });
+                
+                try {
+                    if (typeof showAdminAuth === 'function') {
+                        showAdminAuth();
+                    } else {
+                        console.error('showAdminAuth 函數未定義');
+                        showMessage('系統錯誤：showAdminAuth 函數未定義');
+                    }
+                } catch (error) {
+                    console.error('執行 showAdminAuth 時發生錯誤:', error);
+                    showMessage('系統錯誤：' + error.message);
+                }
+            };
+            
+            employeeEditBtn.addEventListener('click', employeeEditBtn._clickHandler);
             employeeEditBtn.setAttribute('data-has-listener', 'true');
             console.log('員工資料編輯按鈕事件已設定');
         } catch (error) {
