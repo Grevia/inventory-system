@@ -59,6 +59,7 @@
         </div>
         
         <div class="register-container">
+            <!-- 註冊表單區域 -->
             <div class="register-form">
                 <h3>請填寫員工資料</h3>
                 <div class="input-group">
@@ -80,6 +81,32 @@
                 <div class="register-buttons">
                     <button id="registerEmployeeBtn" class="btn-primary">註冊員工</button>
                     <button id="clearRegisterBtn" class="btn-secondary">清除資料</button>
+                </div>
+            </div>
+            
+            <!-- 員工清單區域 -->
+            <div class="employee-list-section">
+                <h3>員工清單</h3>
+                <div class="employee-list-controls">
+                    <button id="refreshEmployeeListBtn" class="btn-secondary">重新整理清單</button>
+                    <button id="saveEmployeeStatusBtn" class="btn-primary">儲存狀態變更</button>
+                </div>
+                <div class="employee-list-container">
+                    <table id="employeeListTable" class="employee-table">
+                        <thead>
+                            <tr>
+                                <th>員工編號</th>
+                                <th>姓名</th>
+                                <th>電話</th>
+                                <th>Email</th>
+                                <th>註冊日期</th>
+                                <th>狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeListBody">
+                            <!-- 員工資料將在這裡動態載入 -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

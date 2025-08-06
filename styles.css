@@ -69,7 +69,7 @@ button {
 
 /* 員工註冊頁面 */
 .register-container {
-    max-width: 600px;
+    max-width: 1200px;
     margin: 50px auto;
     padding: 30px;
     background: white;
@@ -111,6 +111,94 @@ button {
     gap: 15px;
     justify-content: center;
     margin-top: 30px;
+}
+
+/* 員工清單區域 */
+.employee-list-section {
+    margin-top: 40px;
+    border-top: 2px solid #e9ecef;
+    padding-top: 30px;
+}
+
+.employee-list-section h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.employee-list-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.employee-list-container {
+    overflow-x: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.employee-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.employee-table th,
+.employee-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.employee-table th {
+    background: #f8f9fa;
+    font-weight: bold;
+    color: #333;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.employee-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.employee-table tbody tr:nth-child(even) {
+    background: #fafbfc;
+}
+
+.employee-table tbody tr:nth-child(even):hover {
+    background: #f0f1f2;
+}
+
+/* 員工狀態選擇器 */
+.employee-status-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.employee-status-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.status-active {
+    background: #d4edda !important;
+    color: #155724;
+}
+
+.status-inactive {
+    background: #f8d7da !important;
+    color: #721c24;
 }
 
 /* 功能頁面 */
@@ -652,6 +740,28 @@ input[type="text"]:focus {
     .control-group {
         flex-direction: column;
         align-items: stretch;
+    }
+    
+    /* 員工清單響應式設計 */
+    .employee-list-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .employee-table {
+        font-size: 14px;
+    }
+    
+    .employee-table th,
+    .employee-table td {
+        padding: 8px 10px;
+    }
+    
+    .employee-table th:nth-child(3),
+    .employee-table td:nth-child(3),
+    .employee-table th:nth-child(4),
+    .employee-table td:nth-child(4) {
+        display: none;
     }
 }
 

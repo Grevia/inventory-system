@@ -374,6 +374,20 @@ function setupEventListeners() {
         backToLoginFromRegisterBtn.addEventListener('click', () => showPage('loginPage'));
         console.log('返回登入頁面按鈕事件已設定');
     }
+    
+    // 員工清單相關按鈕
+    const refreshEmployeeListBtn = document.getElementById('refreshEmployeeListBtn');
+    const saveEmployeeStatusBtn = document.getElementById('saveEmployeeStatusBtn');
+    
+    if (refreshEmployeeListBtn) {
+        refreshEmployeeListBtn.addEventListener('click', renderEmployeeList);
+        console.log('重新整理員工清單按鈕事件已設定');
+    }
+    
+    if (saveEmployeeStatusBtn) {
+        saveEmployeeStatusBtn.addEventListener('click', saveAllEmployeeStatus);
+        console.log('儲存員工狀態按鈕事件已設定');
+    }
 
     // 返回功能頁面
     const backToFunctionBtn = document.getElementById('backToFunctionBtn');
@@ -973,6 +987,9 @@ function showEmployeeRegister() {
     // 清空註冊表單
     clearRegisterForm();
     
+    // 渲染員工清單
+    renderEmployeeList();
+    
     showPage('employeeRegisterPage');
 }
 
@@ -981,8 +998,33 @@ function loadEmployees() {
     const savedEmployees = localStorage.getItem('employees');
     if (savedEmployees) {
         employees = JSON.parse(savedEmployees);
-        employeeCounter = employees.length + 1;
-        console.log('載入員工資料:', employees);
+        
+        // 為現有的員工資料添加狀態欄位（如果沒有）
+        let hasChanges = false;
+        employees.forEach(employee => {
+            if (!employee.status) {
+                employee.status = 'active'; // 預設為在職中
+                hasChanges = true;
+            }
+        });
+        
+        // 如果有變更，重新儲存
+        if (hasChanges) {
+            localStorage.setItem('employees', JSON.stringify(employees));
+            console.log('已為現有員工資料添加狀態欄位');
+        }
+        
+        // 找出最大的員工編號並設定下一個編號
+        if (employees.length > 0) {
+            const maxId = Math.max(...employees.map(emp => {
+                const idNumber = parseInt(emp.id.replace('GR', ''));
+                return isNaN(idNumber) ? 0 : idNumber;
+            }));
+            employeeCounter = maxId + 1;
+        } else {
+            employeeCounter = 1;
+        }
+        console.log('載入員工資料:', employees, '下一個編號:', employeeCounter);
     }
 }
 
@@ -1035,7 +1077,8 @@ function registerEmployee() {
         name: name,
         phone: phone,
         email: email,
-        registerDate: new Date().toISOString().split('T')[0]
+        registerDate: new Date().toISOString().split('T')[0],
+        status: 'active' // 預設為在職中
     };
     
     // 添加到員工陣列
@@ -1053,6 +1096,9 @@ function registerEmployee() {
     // 清空表單並生成下一個編號
     clearRegisterForm();
     generateNextEmployeeId();
+    
+    // 重新載入員工清單
+    renderEmployeeList();
 }
 
 // 清除註冊表單
@@ -1068,15 +1114,82 @@ function validateEmployeeId(employeeId) {
     // 載入員工資料
     loadEmployees();
     
-    // 檢查員工編號是否存在
-    const employee = employees.find(emp => emp.id === employeeId);
+    // 檢查員工編號是否存在且為在職狀態
+    const employee = employees.find(emp => emp.id === employeeId && emp.status === 'active');
     if (employee) {
         console.log('員工驗證成功:', employee);
         return true;
     }
     
-    console.log('員工編號不存在:', employeeId);
+    console.log('員工編號不存在或已離職:', employeeId);
     return false;
+}
+
+// 渲染員工清單
+function renderEmployeeList() {
+    console.log('渲染員工清單');
+    const tbody = document.getElementById('employeeListBody');
+    if (!tbody) {
+        console.error('找不到員工清單表格主體');
+        return;
+    }
+    
+    // 清空現有內容
+    tbody.innerHTML = '';
+    
+    if (employees.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #666;">尚無員工資料</td></tr>';
+        return;
+    }
+    
+    // 按註冊日期排序（最新的在前）
+    const sortedEmployees = [...employees].sort((a, b) => new Date(b.registerDate) - new Date(a.registerDate));
+    
+    sortedEmployees.forEach((employee, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${employee.id}</td>
+            <td>${employee.name}</td>
+            <td>${employee.phone}</td>
+            <td>${employee.email}</td>
+            <td>${employee.registerDate}</td>
+            <td>
+                <select class="employee-status-select" data-employee-id="${employee.id}" onchange="updateEmployeeStatus('${employee.id}', this.value)">
+                    <option value="active" ${employee.status === 'active' ? 'selected' : ''}>在職中</option>
+                    <option value="inactive" ${employee.status === 'inactive' ? 'selected' : ''}>已離職</option>
+                </select>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    console.log('員工清單渲染完成，共', employees.length, '筆資料');
+}
+
+// 更新員工狀態
+function updateEmployeeStatus(employeeId, newStatus) {
+    console.log('更新員工狀態:', employeeId, newStatus);
+    
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (employee) {
+        employee.status = newStatus;
+        
+        // 儲存到 localStorage
+        localStorage.setItem('employees', JSON.stringify(employees));
+        
+        console.log('員工狀態已更新:', employee);
+        showMessage(`員工 ${employee.name} 狀態已更新為 ${newStatus === 'active' ? '在職中' : '已離職'}`);
+    }
+}
+
+// 儲存所有員工狀態變更
+function saveAllEmployeeStatus() {
+    console.log('儲存所有員工狀態變更');
+    
+    // 重新儲存到 localStorage
+    localStorage.setItem('employees', JSON.stringify(employees));
+    
+    showMessage('所有員工狀態變更已儲存');
 }
 
 // 匯入功能相關變數
