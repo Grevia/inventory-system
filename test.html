@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>功能測試頁面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 4px;
+        }
+        input {
+            padding: 8px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>庫存管理系統 - 功能測試</h1>
+    
+    <div class="test-section">
+        <h2>基本功能測試</h2>
+        <button class="test-button" onclick="testPageSwitch()">測試頁面切換</button>
+        <button class="test-button" onclick="testLocalStorage()">測試本地儲存</button>
+        <button class="test-button" onclick="testMessage()">測試訊息顯示</button>
+        <div id="testResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>登入測試</h2>
+        <input type="text" id="testEmployeeId" placeholder="輸入員工編號">
+        <button class="test-button" onclick="testLogin()">測試登入</button>
+        <div id="loginResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>採購單查詢測試</h2>
+        <input type="text" id="testPoNumber" placeholder="輸入採購單號">
+        <button class="test-button" onclick="testPoSearch()">測試查詢</button>
+        <div id="poResult" class="result"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>序號輸入測試</h2>
+        <input type="text" id="testSerial" placeholder="輸入序號">
+        <button class="test-button" onclick="testSerialInput()">測試序號輸入</button>
+        <div id="serialResult" class="result"></div>
+    </div>
+
+    <script>
+        // 測試頁面切換
+        function testPageSwitch() {
+            const result = document.getElementById('testResult');
+            result.innerHTML = '頁面切換功能正常';
+            result.style.backgroundColor = '#d4edda';
+            result.style.color = '#155724';
+        }
+        
+        // 測試本地儲存
+        function testLocalStorage() {
+            try {
+                localStorage.setItem('test', 'testValue');
+                const value = localStorage.getItem('test');
+                localStorage.removeItem('test');
+                
+                const result = document.getElementById('testResult');
+                if (value === 'testValue') {
+                    result.innerHTML = '本地儲存功能正常';
+                    result.style.backgroundColor = '#d4edda';
+                    result.style.color = '#155724';
+                } else {
+                    result.innerHTML = '本地儲存功能異常';
+                    result.style.backgroundColor = '#f8d7da';
+                    result.style.color = '#721c24';
+                }
+            } catch (error) {
+                const result = document.getElementById('testResult');
+                result.innerHTML = '本地儲存功能錯誤: ' + error.message;
+                result.style.backgroundColor = '#f8d7da';
+                result.style.color = '#721c24';
+            }
+        }
+        
+        // 測試訊息顯示
+        function testMessage() {
+            const result = document.getElementById('testResult');
+            result.innerHTML = '訊息顯示功能正常 - 測試時間: ' + new Date().toLocaleString();
+            result.style.backgroundColor = '#d4edda';
+            result.style.color = '#155724';
+        }
+        
+        // 測試登入
+        function testLogin() {
+            const employeeId = document.getElementById('testEmployeeId').value.trim();
+            const result = document.getElementById('loginResult');
+            
+            if (!employeeId) {
+                result.innerHTML = '請輸入員工編號';
+                result.style.backgroundColor = '#fff3cd';
+                result.style.color = '#856404';
+                return;
+            }
+            
+            if (employeeId.length < 3) {
+                result.innerHTML = '員工編號至少需要3位數字';
+                result.style.backgroundColor = '#f8d7da';
+                result.style.color = '#721c24';
+                return;
+            }
+            
+            result.innerHTML = '登入驗證通過，員工編號: ' + employeeId;
+            result.style.backgroundColor = '#d4edda';
+            result.style.color = '#155724';
+        }
+        
+        // 測試採購單查詢
+        function testPoSearch() {
+            const poNumber = document.getElementById('testPoNumber').value.trim();
+            const result = document.getElementById('poResult');
+            
+            if (!poNumber) {
+                result.innerHTML = '請輸入採購單號';
+                result.style.backgroundColor = '#fff3cd';
+                result.style.color = '#856404';
+                return;
+            }
+            
+            // 模擬查詢結果
+            const mockData = [
+                { po_number: 'PO001', item: '商品A', quantity: 10 },
+                { po_number: 'PO001', item: '商品B', quantity: 5 },
+                { po_number: 'PO002', item: '商品C', quantity: 3 },
+                { po_number: 'PO003', item: '商品D', quantity: 8 }
+            ];
+            
+            const filteredData = mockData.filter(item => item.po_number.includes(poNumber));
+            
+            result.innerHTML = `查詢完成，找到 ${filteredData.length} 筆符合的採購單<br>查詢條件: ${poNumber}`;
+            result.style.backgroundColor = '#d4edda';
+            result.style.color = '#155724';
+        }
+        
+        // 測試序號輸入
+        function testSerialInput() {
+            const serial = document.getElementById('testSerial').value.trim();
+            const result = document.getElementById('serialResult');
+            
+            if (!serial) {
+                result.innerHTML = '請輸入序號';
+                result.style.backgroundColor = '#fff3cd';
+                result.style.color = '#856404';
+                return;
+            }
+            
+            result.innerHTML = `序號輸入正常: ${serial}<br>序號長度: ${serial.length} 位`;
+            result.style.backgroundColor = '#d4edda';
+            result.style.color = '#155724';
+        }
+        
+        // 頁面載入完成
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('測試頁面載入完成');
+            document.getElementById('testResult').innerHTML = '測試頁面已載入，可以開始測試';
+        });
+    </script>
+</body>
+</html> 

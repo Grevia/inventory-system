@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>庫存管理系統</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+    <!-- 登入頁面 -->
+    <div id="loginPage" class="page active">
+        <div class="login-container">
+            <h1>庫存管理系統</h1>
+            <div class="login-form">
+                <h2>員工登入</h2>
+                <div class="input-group">
+                    <label for="employeeId">員工編號：</label>
+                    <input type="text" id="employeeId" placeholder="請輸入員工編號" maxlength="10">
+                </div>
+                <button id="loginBtn" class="btn-primary">登入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 功能頁面 -->
+    <div id="functionPage" class="page">
+        <div class="header">
+            <h1>功能選單</h1>
+            <div class="user-info">
+                <span id="currentUser"></span>
+                <button id="logoutBtn" class="btn-secondary">登出</button>
+            </div>
+        </div>
+        <div class="function-grid">
+            <div class="function-card" onclick="navigateToReceiving()">
+                <div class="card-icon">📦</div>
+                <h3>點到貨</h3>
+                <p>處理貨物接收</p>
+            </div>
+            <div class="function-card" onclick="navigateToImport()">
+                <div class="card-icon">📥</div>
+                <h3>匯入採購到貨</h3>
+                <p>從Google Sheets匯入資料</p>
+            </div>
+            <div class="function-card disabled">
+                <div class="card-icon">📊</div>
+                <h3>功能3</h3>
+                <p>待開發</p>
+            </div>
+            <div class="function-card disabled">
+                <div class="card-icon">🔍</div>
+                <h3>功能4</h3>
+                <p>待開發</p>
+            </div>
+            <div class="function-card disabled">
+                <div class="card-icon">📈</div>
+                <h3>功能5</h3>
+                <p>待開發</p>
+            </div>
+            <div class="function-card disabled">
+                <div class="card-icon">⚙️</div>
+                <h3>功能6</h3>
+                <p>待開發</p>
+            </div>
+            <div class="function-card disabled">
+                <div class="card-icon">📱</div>
+                <h3>功能7</h3>
+                <p>待開發</p>
+            </div>
+            <div class="function-card disabled">
+                <div class="card-icon">🔧</div>
+                <h3>功能8</h3>
+                <p>待開發</p>
+            </div>
+            <div class="function-card disabled">
+                <div class="card-icon">📞</div>
+                <h3>功能9</h3>
+                <p>待開發</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- 點到貨頁面 -->
+    <div id="receivingPage" class="page">
+        <div class="header">
+            <h1>點到貨系統</h1>
+            <button id="backToFunctionBtn" class="btn-secondary">回功能頁面</button>
+        </div>
+        
+        <div class="receiving-container">
+            <!-- 採購單號輸入區域 -->
+            <div class="po-input-section">
+                <div class="input-group">
+                    <label for="poNumber">採購單號：</label>
+                    <input type="text" id="poNumber" placeholder="請輸入採購單號" maxlength="20">
+                    <button id="searchPoBtn" class="btn-primary">查詢</button>
+                </div>
+            </div>
+
+            <!-- 統計結果顯示 -->
+            <div class="statistics-section">
+                <div class="stat-card">
+                    <h3>符合筆數</h3>
+                    <div id="matchCount" class="stat-number">0</div>
+                    <p>筆符合的採購單</p>
+                </div>
+                <div class="stat-card">
+                    <h3>到貨總數</h3>
+                    <div id="totalQuantity" class="stat-number">0</div>
+                    <p>件商品</p>
+                </div>
+            </div>
+
+            <!-- 序號輸入區域 -->
+            <div class="serial-input-section">
+                <h3>序號輸入</h3>
+                
+                <!-- 刷到貨比數統計 -->
+                <div class="scan-count-section">
+                    <div class="scan-count-card">
+                        <h4>刷到貨比數</h4>
+                        <div id="scanCount" class="scan-count-number">0</div>
+                        <p>筆已掃描</p>
+                    </div>
+                </div>
+                
+                <div class="serial-grid">
+                    <div class="serial-input-group">
+                        <label>序號 1：</label>
+                        <input type="text" class="serial-input" data-index="1" placeholder="請輸入或掃描序號">
+                    </div>
+                    <div class="serial-input-group">
+                        <label>序號 2：</label>
+                        <input type="text" class="serial-input" data-index="2" placeholder="請輸入或掃描序號">
+                    </div>
+                    <div class="serial-input-group">
+                        <label>序號 3：</label>
+                        <input type="text" class="serial-input" data-index="3" placeholder="請輸入或掃描序號">
+                    </div>
+                    <div class="serial-input-group">
+                        <label>序號 4：</label>
+                        <input type="text" class="serial-input" data-index="4" placeholder="請輸入或掃描序號">
+                    </div>
+                    <div class="serial-input-group">
+                        <label>序號 5：</label>
+                        <input type="text" class="serial-input" data-index="5" placeholder="請輸入或掃描序號">
+                    </div>
+                    <div class="serial-input-group">
+                        <label>序號 6：</label>
+                        <input type="text" class="serial-input" data-index="6" placeholder="請輸入或掃描序號">
+                    </div>
+                    <div class="serial-input-group">
+                        <label>序號 7：</label>
+                        <input type="text" class="serial-input" data-index="7" placeholder="請輸入或掃描序號">
+                    </div>
+                    <div class="serial-input-group">
+                        <label>序號 8：</label>
+                        <input type="text" class="serial-input" data-index="8" placeholder="請輸入或掃描序號">
+                    </div>
+                    <div class="serial-input-group">
+                        <label>序號 9：</label>
+                        <input type="text" class="serial-input" data-index="9" placeholder="請輸入或掃描序號">
+                    </div>
+                    <div class="serial-input-group">
+                        <label>序號 10：</label>
+                        <input type="text" class="serial-input" data-index="10" placeholder="請輸入或掃描序號">
+                    </div>
+                </div>
+                <div class="action-buttons">
+                    <button id="submitBtn" class="btn-primary">提交資料</button>
+                    <button id="clearBtn" class="btn-secondary">清除所有</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 匯入採購到貨頁面 -->
+    <div id="importPage" class="page">
+        <div class="header">
+            <h1>匯入採購到貨</h1>
+            <button id="backToFunctionFromImportBtn" class="btn-secondary">回功能頁面</button>
+        </div>
+        
+        <div class="import-container">
+            <!-- Google Sheets 設定 -->
+            <div class="sheets-config-section">
+                <h3>Google Sheets 設定</h3>
+                <div class="input-group">
+                    <label for="sheetsUrl">Google Sheets URL：</label>
+                    <input type="text" id="sheetsUrl" placeholder="請輸入Google Sheets URL" value="https://docs.google.com/spreadsheets/d/1wJLOHKOrT06CMpuY9X37FhXdQBRCU_gv2KCvJBkMC4k/edit?gid=1971479845#gid=1971479845">
+                </div>
+                <div class="input-group">
+                    <label for="sheetName">工作表名稱：</label>
+                    <input type="text" id="sheetName" placeholder="請輸入工作表名稱" value="採購明細">
+                </div>
+                <div class="input-group">
+                    <label>認證方式：</label>
+                    <span style="color: #007bff; font-weight: bold;">🌐 公開讀取模式</span>
+                </div>
+                <div class="input-group">
+                    <label>設定說明：</label>
+                    <span style="color: #666; font-size: 14px;">請確保Google Sheets已設定為「任何人都可以查看」</span>
+                </div>
+                <button id="testConnectionBtn" class="btn-primary">測試連線</button>
+            </div>
+
+            <!-- 資料預覽 -->
+            <div class="data-preview-section">
+                <h3>資料預覽</h3>
+                <div class="preview-controls">
+                    <button id="loadDataBtn" class="btn-primary">載入資料</button>
+                    <button id="refreshDataBtn" class="btn-secondary">重新整理</button>
+                    <span id="dataCount" class="data-count">0 筆資料</span>
+                </div>
+                <div class="table-container">
+                    <table id="dataTable" class="data-table">
+                        <tbody id="dataTableBody">
+                            <!-- 資料會動態載入，包括表頭 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 匯入控制 -->
+            <div class="import-controls-section">
+                <h3>匯入控制</h3>
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                        全選
+                    </label>
+                    <button id="importSelectedBtn" class="btn-primary">匯入選取項目</button>
+                    <button id="clearSelectionBtn" class="btn-secondary">清除選擇</button>
+                </div>
+                <div class="import-status">
+                    <div id="importProgress" class="progress-bar hidden">
+                        <div class="progress-fill"></div>
+                    </div>
+                    <div id="importStatus" class="status-text"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 載入中提示 -->
+    <div id="loadingOverlay" class="loading-overlay hidden">
+        <div class="loading-spinner"></div>
+        <p>處理中...</p>
+    </div>
+
+    <!-- 訊息提示 -->
+    <div id="messageBox" class="message-box hidden">
+        <div class="message-content">
+            <span id="messageText"></span>
+            <button id="messageCloseBtn" class="btn-secondary">確定</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
