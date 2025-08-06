@@ -12,6 +12,12 @@ body {
     color: #333;
 }
 
+/* 確保按鈕可以正常點擊 */
+button {
+    pointer-events: auto !important;
+    cursor: pointer !important;
+}
+
 /* 頁面切換 */
 .page {
     display: none;
@@ -53,6 +59,60 @@ body {
     font-size: 1.5em;
 }
 
+/* 登入按鈕組 */
+.login-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+/* 員工註冊頁面 */
+.register-container {
+    max-width: 600px;
+    margin: 50px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.register-form {
+    text-align: center;
+}
+
+.register-form h3 {
+    color: #333;
+    margin-bottom: 30px;
+    font-size: 1.5em;
+}
+
+.register-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px 0;
+    border: 2px solid #e9ecef;
+}
+
+.generated-id {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: #667eea;
+    margin: 10px 0;
+    padding: 10px;
+    background: white;
+    border-radius: 8px;
+    border: 2px solid #667eea;
+}
+
+.register-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
 /* 功能頁面 */
 .header {
     background: white;
@@ -66,6 +126,12 @@ body {
 .header h1 {
     color: #333;
     font-size: 2em;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .user-info {
@@ -282,6 +348,13 @@ input[type="text"]:focus {
     cursor: pointer;
     transition: all 0.3s ease;
     min-width: 120px;
+    pointer-events: auto !important;
+    position: relative;
+    z-index: 10;
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
 }
 
 .btn-primary {

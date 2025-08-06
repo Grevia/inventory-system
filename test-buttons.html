@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>按鈕測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        .test-button {
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background-color: #0056b3;
+        }
+        #output {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>按鈕點擊測試</h1>
+    
+    <button id="testBtn1" class="test-button">測試按鈕 1</button>
+    <button id="testBtn2" class="test-button">測試按鈕 2</button>
+    <button id="testBtn3" class="test-button">測試按鈕 3</button>
+    
+    <div id="output">點擊按鈕查看結果...</div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM 載入完成');
+            
+            const output = document.getElementById('output');
+            
+            // 全域點擊事件調試
+            document.addEventListener('click', function(e) {
+                console.log('全域點擊:', e.target.tagName, e.target.id, e.target.className);
+            });
+            
+            // 測試按鈕 1
+            const btn1 = document.getElementById('testBtn1');
+            console.log('按鈕 1 元素:', btn1);
+            if (btn1) {
+                btn1.addEventListener('click', function(e) {
+                    console.log('按鈕 1 被點擊');
+                    e.preventDefault();
+                    output.innerHTML += '<br>按鈕 1 被點擊 - ' + new Date().toLocaleTimeString();
+                });
+                console.log('按鈕 1 事件監聽器已設定');
+            }
+            
+            // 測試按鈕 2
+            const btn2 = document.getElementById('testBtn2');
+            console.log('按鈕 2 元素:', btn2);
+            if (btn2) {
+                btn2.addEventListener('click', function(e) {
+                    console.log('按鈕 2 被點擊');
+                    e.preventDefault();
+                    output.innerHTML += '<br>按鈕 2 被點擊 - ' + new Date().toLocaleTimeString();
+                });
+                console.log('按鈕 2 事件監聽器已設定');
+            }
+            
+            // 測試按鈕 3
+            const btn3 = document.getElementById('testBtn3');
+            console.log('按鈕 3 元素:', btn3);
+            if (btn3) {
+                btn3.addEventListener('click', function(e) {
+                    console.log('按鈕 3 被點擊');
+                    e.preventDefault();
+                    output.innerHTML += '<br>按鈕 3 被點擊 - ' + new Date().toLocaleTimeString();
+                });
+                console.log('按鈕 3 事件監聽器已設定');
+            }
+            
+            console.log('所有事件監聽器已設定');
+        });
+    </script>
+</body>
+</html> 

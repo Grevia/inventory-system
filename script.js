@@ -4,21 +4,103 @@ let currentPoNumber = null;
 let matchCount = 0;
 let scanCount = 0; // 刷到貨比數
 
+// 員工管理相關變數
+let employeeCounter = 1; // 員工編號計數器
+let employees = []; // 員工資料陣列
+
+// 管理員帳號密碼
+const ADMIN_USERNAME = 'Greaia_admin';
+const ADMIN_PASSWORD = 'admin0110';
+
 // Google Sheets API 設定
 const SPREADSHEET_ID = '1wJLOHKOrT06CMpuY9X37FhXdQBRCU_gv2KCvJBkMC4k';
 const PO_HEADER_RANGE = 'po_header!A:T';
 const PO_DETAIL_RANGE = 'po_detail!A:C';
 
+// 全域錯誤處理
+window.addEventListener('error', function(e) {
+    console.error('JavaScript 錯誤:', e.error);
+    console.error('錯誤位置:', e.filename, ':', e.lineno);
+    console.error('錯誤訊息:', e.message);
+    
+    // 顯示錯誤訊息給用戶
+    if (typeof showMessage === 'function') {
+        showMessage('發生錯誤: ' + e.message);
+    }
+    
+    // 防止錯誤阻止其他功能
+    e.preventDefault();
+    return false;
+});
+
+// 全域未處理的 Promise 錯誤
+window.addEventListener('unhandledrejection', function(e) {
+    console.error('未處理的 Promise 錯誤:', e.reason);
+    e.preventDefault();
+});
+
+// 全域點擊事件調試
+document.addEventListener('click', function(e) {
+    console.log('點擊事件:', e.target.tagName, e.target.id, e.target.className);
+    
+    // 檢查是否點擊了按鈕
+    if (e.target.tagName === 'BUTTON') {
+        console.log('按鈕被點擊:', e.target.id, e.target.className);
+        
+        // 檢查按鈕是否有事件監聽器
+        const button = e.target;
+        if (button.onclick === null && !button.hasAttribute('data-has-listener')) {
+            console.warn('按鈕可能沒有事件監聽器:', button.id);
+            
+            // 嘗試手動觸發按鈕功能
+            if (button.id === 'loginBtn') {
+                console.log('嘗試手動觸發登入功能');
+                handleLogin();
+            } else if (button.id === 'employeeEditBtn') {
+                console.log('嘗試手動觸發員工資料編輯功能');
+                showAdminAuth();
+            } else if (button.id === 'adminAuthBtn') {
+                console.log('嘗試手動觸發管理員驗證功能');
+                handleAdminAuth();
+            } else if (button.id === 'backToLoginBtn') {
+                console.log('嘗試手動觸發返回登入功能');
+                showPage('loginPage');
+            }
+        }
+    }
+});
+
 // 初始化
 document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM載入完成，初始化應用程式');
-    initializeApp();
-    setupEventListeners();
+    try {
+        initializeApp();
+        setupEventListeners();
+        console.log('應用程式初始化完成');
+    } catch (error) {
+        console.error('初始化過程中發生錯誤:', error);
+        alert('應用程式初始化失敗: ' + error.message);
+    }
 });
 
 // 初始化應用程式
 function initializeApp() {
     console.log('初始化應用程式');
+    
+    // 確保載入覆蓋層和訊息框是隱藏的
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const messageBox = document.getElementById('messageBox');
+    
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+        console.log('載入覆蓋層已隱藏');
+    }
+    
+    if (messageBox) {
+        messageBox.classList.add('hidden');
+        console.log('訊息框已隱藏');
+    }
+    
     // 檢查是否有已登入的用戶
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
@@ -34,13 +116,40 @@ function initializeApp() {
 function setupEventListeners() {
     console.log('設定事件監聽器');
     
+    // 確保載入覆蓋層是隱藏的
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.classList.add('hidden');
+        console.log('確保載入覆蓋層已隱藏');
+    }
+    
+    // 確保訊息框是隱藏的
+    const messageBox = document.getElementById('messageBox');
+    if (messageBox) {
+        messageBox.classList.add('hidden');
+        console.log('確保訊息框已隱藏');
+    }
+    
     // 登入相關
     const loginBtn = document.getElementById('loginBtn');
     const employeeIdInput = document.getElementById('employeeId');
     
+    console.log('尋找登入按鈕:', loginBtn);
     if (loginBtn) {
-        loginBtn.addEventListener('click', handleLogin);
-        console.log('登入按鈕事件已設定');
+        try {
+            loginBtn.addEventListener('click', function(e) {
+                console.log('登入按鈕被點擊');
+                e.preventDefault();
+                e.stopPropagation();
+                handleLogin();
+            });
+            loginBtn.setAttribute('data-has-listener', 'true');
+            console.log('登入按鈕事件已設定');
+        } catch (error) {
+            console.error('設定登入按鈕事件時發生錯誤:', error);
+        }
+    } else {
+        console.error('找不到登入按鈕');
     }
     
     if (employeeIdInput) {
@@ -106,6 +215,92 @@ function setupEventListeners() {
     if (clearBtn) {
         clearBtn.addEventListener('click', clearAllInputs);
         console.log('清除按鈕事件已設定');
+    }
+
+    // 員工資料編輯按鈕
+    const employeeEditBtn = document.getElementById('employeeEditBtn');
+    console.log('尋找員工資料編輯按鈕:', employeeEditBtn);
+    if (employeeEditBtn) {
+        try {
+            employeeEditBtn.addEventListener('click', function(e) {
+                console.log('員工資料編輯按鈕被點擊');
+                e.preventDefault();
+                e.stopPropagation();
+                showAdminAuth();
+            });
+            employeeEditBtn.setAttribute('data-has-listener', 'true');
+            console.log('員工資料編輯按鈕事件已設定');
+        } catch (error) {
+            console.error('設定員工資料編輯按鈕事件時發生錯誤:', error);
+        }
+    } else {
+        console.error('找不到員工資料編輯按鈕');
+    }
+
+    // 管理員驗證按鈕
+    const adminAuthBtn = document.getElementById('adminAuthBtn');
+    const backToLoginBtn = document.getElementById('backToLoginBtn');
+    
+    console.log('尋找管理員驗證按鈕:', adminAuthBtn);
+    if (adminAuthBtn) {
+        try {
+            adminAuthBtn.addEventListener('click', function(e) {
+                console.log('管理員驗證按鈕被點擊');
+                e.preventDefault();
+                e.stopPropagation();
+                handleAdminAuth();
+            });
+            adminAuthBtn.setAttribute('data-has-listener', 'true');
+            console.log('管理員驗證按鈕事件已設定');
+        } catch (error) {
+            console.error('設定管理員驗證按鈕事件時發生錯誤:', error);
+        }
+    } else {
+        console.error('找不到管理員驗證按鈕');
+    }
+    
+    console.log('尋找返回登入按鈕:', backToLoginBtn);
+    if (backToLoginBtn) {
+        try {
+            backToLoginBtn.addEventListener('click', function(e) {
+                console.log('返回登入按鈕被點擊');
+                e.preventDefault();
+                e.stopPropagation();
+                showPage('loginPage');
+            });
+            backToLoginBtn.setAttribute('data-has-listener', 'true');
+            console.log('返回登入按鈕事件已設定');
+        } catch (error) {
+            console.error('設定返回登入按鈕事件時發生錯誤:', error);
+        }
+    } else {
+        console.error('找不到返回登入按鈕');
+    }
+
+    // 員工註冊相關按鈕
+    const registerEmployeeBtn = document.getElementById('registerEmployeeBtn');
+    const clearRegisterBtn = document.getElementById('clearRegisterBtn');
+    const backToAdminBtn = document.getElementById('backToAdminBtn');
+    const backToLoginFromRegisterBtn = document.getElementById('backToLoginFromRegisterBtn');
+    
+    if (registerEmployeeBtn) {
+        registerEmployeeBtn.addEventListener('click', registerEmployee);
+        console.log('註冊員工按鈕事件已設定');
+    }
+    
+    if (clearRegisterBtn) {
+        clearRegisterBtn.addEventListener('click', clearRegisterForm);
+        console.log('清除註冊資料按鈕事件已設定');
+    }
+    
+    if (backToAdminBtn) {
+        backToAdminBtn.addEventListener('click', () => showPage('adminAuthPage'));
+        console.log('返回管理員驗證按鈕事件已設定');
+    }
+    
+    if (backToLoginFromRegisterBtn) {
+        backToLoginFromRegisterBtn.addEventListener('click', () => showPage('loginPage'));
+        console.log('返回登入頁面按鈕事件已設定');
     }
 
     // 返回功能頁面
@@ -194,9 +389,9 @@ function handleLogin() {
         return;
     }
     
-    // 簡單的員工編號驗證
-    if (employeeId.length < 3) {
-        showMessage('員工編號至少需要3位數字');
+    // 驗證員工編號是否存在
+    if (!validateEmployeeId(employeeId)) {
+        showMessage('員工編號不存在，請先註冊');
         return;
     }
     
@@ -209,6 +404,7 @@ function handleLogin() {
     // 清空登入欄位
     document.getElementById('employeeId').value = '';
     console.log('登入成功:', employeeId);
+    showMessage('登入成功！');
 }
 
 // 登出處理
@@ -661,6 +857,155 @@ function setupBarcodeScanner() {
 
 // 初始化條碼掃描器
 setupBarcodeScanner();
+
+// 顯示管理員驗證頁面
+function showAdminAuth() {
+    console.log('顯示管理員驗證頁面');
+    showPage('adminAuthPage');
+    
+    // 清空輸入欄位
+    document.getElementById('adminUsername').value = '';
+    document.getElementById('adminPassword').value = '';
+}
+
+// 處理管理員驗證
+function handleAdminAuth() {
+    console.log('處理管理員驗證');
+    
+    const username = document.getElementById('adminUsername').value.trim();
+    const password = document.getElementById('adminPassword').value.trim();
+    
+    if (!username || !password) {
+        showMessage('請輸入管理帳號和密碼');
+        return;
+    }
+    
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        console.log('管理員驗證成功');
+        showEmployeeRegister();
+    } else {
+        showMessage('管理帳號或密碼錯誤');
+    }
+}
+
+// 顯示員工註冊頁面
+function showEmployeeRegister() {
+    console.log('顯示員工註冊頁面');
+    
+    // 載入已儲存的員工資料
+    loadEmployees();
+    
+    // 生成下一個員工編號
+    generateNextEmployeeId();
+    
+    // 清空註冊表單
+    clearRegisterForm();
+    
+    showPage('employeeRegisterPage');
+}
+
+// 載入員工資料
+function loadEmployees() {
+    const savedEmployees = localStorage.getItem('employees');
+    if (savedEmployees) {
+        employees = JSON.parse(savedEmployees);
+        employeeCounter = employees.length + 1;
+        console.log('載入員工資料:', employees);
+    }
+}
+
+// 生成下一個員工編號
+function generateNextEmployeeId() {
+    const nextId = `GR${String(employeeCounter).padStart(5, '0')}`;
+    document.getElementById('generatedEmployeeId').textContent = nextId;
+    console.log('生成員工編號:', nextId);
+}
+
+// 註冊員工
+function registerEmployee() {
+    console.log('註冊員工');
+    
+    const name = document.getElementById('employeeName').value.trim();
+    const phone = document.getElementById('employeePhone').value.trim();
+    const email = document.getElementById('employeeEmail').value.trim();
+    const employeeId = document.getElementById('generatedEmployeeId').textContent;
+    
+    // 驗證輸入
+    if (!name || !phone || !email) {
+        showMessage('請填寫所有必填欄位');
+        return;
+    }
+    
+    // 驗證 Email 格式
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showMessage('請輸入有效的 Email 格式');
+        return;
+    }
+    
+    // 驗證電話格式
+    const phoneRegex = /^[\d\-\+\(\)\s]+$/;
+    if (!phoneRegex.test(phone)) {
+        showMessage('請輸入有效的電話號碼');
+        return;
+    }
+    
+    // 檢查 Email 是否已存在
+    const existingEmployee = employees.find(emp => emp.email === email);
+    if (existingEmployee) {
+        showMessage('此 Email 已被註冊');
+        return;
+    }
+    
+    // 創建新員工資料
+    const newEmployee = {
+        id: employeeId,
+        name: name,
+        phone: phone,
+        email: email,
+        registerDate: new Date().toISOString().split('T')[0]
+    };
+    
+    // 添加到員工陣列
+    employees.push(newEmployee);
+    
+    // 儲存到 localStorage
+    localStorage.setItem('employees', JSON.stringify(employees));
+    
+    // 更新計數器
+    employeeCounter++;
+    
+    console.log('員工註冊成功:', newEmployee);
+    showMessage(`員工註冊成功！員工編號：${employeeId}`);
+    
+    // 清空表單並生成下一個編號
+    clearRegisterForm();
+    generateNextEmployeeId();
+}
+
+// 清除註冊表單
+function clearRegisterForm() {
+    document.getElementById('employeeName').value = '';
+    document.getElementById('employeePhone').value = '';
+    document.getElementById('employeeEmail').value = '';
+    console.log('清除註冊表單');
+}
+
+// 驗證員工編號（修改原有的登入驗證）
+function validateEmployeeId(employeeId) {
+    // 載入員工資料
+    loadEmployees();
+    
+    // 檢查員工編號是否存在
+    const employee = employees.find(emp => emp.id === employeeId);
+    if (employee) {
+        console.log('員工驗證成功:', employee);
+        return true;
+    }
+    
+    console.log('員工編號不存在:', employeeId);
+    return false;
+}
 
 // 匯入功能相關變數
 let googleSheetsData = [];

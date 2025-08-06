@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>按鈕診斷</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .diagnostic-panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-button {
+            padding: 10px 20px;
+            margin: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .test-button:hover {
+            background-color: #0056b3;
+        }
+        .test-button:active {
+            background-color: #004085;
+        }
+        .log {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .status.success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .status.warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+    </style>
+</head>
+<body>
+    <h1>按鈕點擊診斷工具</h1>
+    
+    <div class="diagnostic-panel">
+        <h2>系統狀態</h2>
+        <div id="systemStatus"></div>
+    </div>
+    
+    <div class="diagnostic-panel">
+        <h2>按鈕測試</h2>
+        <button id="testBtn1" class="test-button">測試按鈕 1</button>
+        <button id="testBtn2" class="test-button">測試按鈕 2</button>
+        <button id="testBtn3" class="test-button">測試按鈕 3</button>
+        <button id="testBtn4" class="test-button">測試按鈕 4</button>
+    </div>
+    
+    <div class="diagnostic-panel">
+        <h2>事件日誌</h2>
+        <div id="eventLog" class="log"></div>
+        <button onclick="clearLog()" class="test-button">清除日誌</button>
+    </div>
+
+    <script>
+        let logElement;
+        
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.innerHTML += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+            console.log(message);
+        }
+        
+        function clearLog() {
+            logElement.innerHTML = '';
+        }
+        
+        function addStatus(message, type = 'success') {
+            const statusDiv = document.getElementById('systemStatus');
+            const statusElement = document.createElement('div');
+            statusElement.className = `status ${type}`;
+            statusElement.textContent = message;
+            statusDiv.appendChild(statusElement);
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            logElement = document.getElementById('eventLog');
+            log('DOM 載入完成');
+            
+            // 檢查基本功能
+            addStatus('DOM 載入完成', 'success');
+            
+            // 全域點擊事件監聽
+            document.addEventListener('click', function(e) {
+                log(`全域點擊: ${e.target.tagName} #${e.target.id} .${e.target.className}`);
+            });
+            
+            // 測試按鈕事件
+            const buttons = ['testBtn1', 'testBtn2', 'testBtn3', 'testBtn4'];
+            
+            buttons.forEach((btnId, index) => {
+                const button = document.getElementById(btnId);
+                if (button) {
+                    log(`找到按鈕 ${index + 1}: ${btnId}`);
+                    button.addEventListener('click', function(e) {
+                        log(`按鈕 ${index + 1} 被點擊`);
+                        e.preventDefault();
+                        addStatus(`按鈕 ${index + 1} 正常工作`, 'success');
+                    });
+                    addStatus(`按鈕 ${index + 1} 事件監聽器已設定`, 'success');
+                } else {
+                    log(`找不到按鈕: ${btnId}`);
+                    addStatus(`找不到按鈕: ${btnId}`, 'error');
+                }
+            });
+            
+            // 檢查 CSS 樣式
+            const testBtn = document.getElementById('testBtn1');
+            if (testBtn) {
+                const styles = window.getComputedStyle(testBtn);
+                log(`按鈕樣式檢查:`);
+                log(`  pointer-events: ${styles.pointerEvents}`);
+                log(`  position: ${styles.position}`);
+                log(`  z-index: ${styles.zIndex}`);
+                log(`  cursor: ${styles.cursor}`);
+                
+                if (styles.pointerEvents === 'none') {
+                    addStatus('警告: 按鈕的 pointer-events 為 none', 'warning');
+                }
+                if (styles.cursor !== 'pointer') {
+                    addStatus('警告: 按鈕的 cursor 不是 pointer', 'warning');
+                }
+            }
+            
+            // 檢查是否有覆蓋層
+            const overlays = document.querySelectorAll('[style*="position: fixed"], [style*="position: absolute"]');
+            log(`找到 ${overlays.length} 個固定定位元素`);
+            
+            // 檢查 JavaScript 錯誤
+            window.addEventListener('error', function(e) {
+                log(`JavaScript 錯誤: ${e.message}`);
+                addStatus(`JavaScript 錯誤: ${e.message}`, 'error');
+            });
+            
+            log('診斷工具初始化完成');
+        });
+        
+        // 測試鍵盤事件
+        document.addEventListener('keydown', function(e) {
+            log(`鍵盤事件: ${e.key} (keyCode: ${e.keyCode})`);
+        });
+        
+        // 測試滑鼠事件
+        document.addEventListener('mousedown', function(e) {
+            log(`滑鼠按下: ${e.target.tagName} #${e.target.id}`);
+        });
+        
+        document.addEventListener('mouseup', function(e) {
+            log(`滑鼠釋放: ${e.target.tagName} #${e.target.id}`);
+        });
+    </script>
+</body>
+</html> 
