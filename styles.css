@@ -201,6 +201,377 @@ button {
     color: #721c24;
 }
 
+/* 出貨表頁面 */
+.shipping-container {
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.shipping-form-section {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.shipping-form-section h3 {
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.shipping-form {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.form-row .full-width {
+    grid-column: 1 / -1;
+}
+
+.shipping-form .input-group {
+    margin: 0;
+}
+
+.shipping-form input,
+.shipping-form select,
+.shipping-form textarea {
+    width: 100%;
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+}
+
+.shipping-form input:focus,
+.shipping-form select:focus,
+.shipping-form textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.shipping-form input[readonly] {
+    background-color: #f8f9fa;
+    color: #495057;
+    cursor: not-allowed;
+}
+
+.shipping-form input[readonly]:focus {
+    border-color: #ced4da;
+    box-shadow: none;
+}
+
+.shipping-form textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.shipping-form-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+/* 出貨記錄清單 */
+.shipping-list-section {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.shipping-list-section h3 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.shipping-list-controls {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.shipping-list-container {
+    overflow-x: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.shipping-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.shipping-table th,
+.shipping-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.shipping-table th {
+    background: #f8f9fa;
+    font-weight: bold;
+    color: #333;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.shipping-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.shipping-table tbody tr:nth-child(even) {
+    background: #fafbfc;
+}
+
+.shipping-table tbody tr:nth-child(even):hover {
+    background: #f0f1f2;
+}
+
+/* 操作按鈕 */
+.shipping-action-btn {
+    padding: 6px 12px;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    margin: 2px;
+    transition: all 0.3s ease;
+}
+
+.shipping-edit-btn {
+    background: #007bff;
+    color: white;
+}
+
+.shipping-edit-btn:hover {
+    background: #0056b3;
+}
+
+.shipping-delete-btn {
+    background: #dc3545;
+    color: white;
+}
+
+.shipping-delete-btn:hover {
+    background: #c82333;
+}
+
+/* 開箱明細頁面 */
+.unboxing-container {
+    max-width: 1400px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+.unboxing-search-section {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.unboxing-search-section h3 {
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.search-form .input-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.search-form .input-group label {
+    min-width: 100px;
+    font-weight: bold;
+}
+
+.search-form .input-group input {
+    flex: 1;
+}
+
+.search-form .input-group button {
+    min-width: 100px;
+}
+
+/* 開箱明細表單 */
+.unboxing-form-section {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.unboxing-form-section h3 {
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 1.5em;
+    text-align: center;
+}
+
+.unboxing-info {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 30px;
+    border: 2px solid #e9ecef;
+}
+
+.info-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.info-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.info-item label {
+    font-weight: bold;
+    color: #333;
+    min-width: 100px;
+}
+
+.info-item span {
+    color: #007bff;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+/* 商品明細區域 */
+.unboxing-items-section {
+    margin-bottom: 30px;
+}
+
+.unboxing-items-section h4 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.3em;
+    text-align: center;
+}
+
+.unboxing-items-container {
+    overflow-x: auto;
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.unboxing-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+}
+
+.unboxing-table th,
+.unboxing-table td {
+    padding: 12px 15px;
+    text-align: left;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.unboxing-table th {
+    background: #f8f9fa;
+    font-weight: bold;
+    color: #333;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.unboxing-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.unboxing-table tbody tr:nth-child(even) {
+    background: #fafbfc;
+}
+
+.unboxing-table tbody tr:nth-child(even):hover {
+    background: #f0f1f2;
+}
+
+/* 商品分類選擇器 */
+.product-category-select {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+}
+
+.product-category-select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* 商品序號輸入框 */
+.product-serial-input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    width: 100%;
+}
+
+.product-serial-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+/* 項目批號樣式 */
+.item-batch-number {
+    font-family: monospace;
+    font-size: 12px;
+    color: #007bff;
+    font-weight: bold;
+    background: #f8f9fa;
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #e9ecef;
+}
+
+.unboxing-form-buttons {
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    margin-top: 30px;
+}
+
 /* 功能頁面 */
 .header {
     background: white;
@@ -762,6 +1133,63 @@ input[type="text"]:focus {
     .employee-table th:nth-child(4),
     .employee-table td:nth-child(4) {
         display: none;
+    }
+    
+    /* 出貨表響應式設計 */
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .shipping-list-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .shipping-table {
+        font-size: 14px;
+    }
+    
+    .shipping-table th,
+    .shipping-table td {
+        padding: 8px 10px;
+    }
+    
+    .shipping-table th:nth-child(3),
+    .shipping-table td:nth-child(3),
+    .shipping-table th:nth-child(7),
+    .shipping-table td:nth-child(7) {
+        display: none;
+    }
+    
+    /* 開箱明細響應式設計 */
+    .search-form .input-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .search-form .input-group label {
+        min-width: auto;
+    }
+    
+    .info-row {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .unboxing-table {
+        font-size: 14px;
+    }
+    
+    .unboxing-table th,
+    .unboxing-table td {
+        padding: 8px 10px;
+    }
+    
+    .unboxing-form-buttons {
+        flex-direction: column;
+        align-items: center;
     }
 }
 

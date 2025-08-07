@@ -13,7 +13,7 @@ const ADMIN_USERNAME = 'Greaia_admin';
 const ADMIN_PASSWORD = 'admin0110';
 
 // Google Sheets API 設定
-const SPREADSHEET_ID = '1wJLOHKOrT06CMpuY9X37FhXdQBRCU_gv2KCvJBkMC4k';
+const SPREADSHEET_ID = GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID;
 const PO_HEADER_RANGE = 'po_header!A:T';
 const PO_DETAIL_RANGE = 'po_detail!A:C';
 
@@ -164,6 +164,13 @@ function initializeApp() {
         updateUserDisplay();
     } else {
         showPage('loginPage');
+    }
+    
+    // 初始化出貨表單預設日期
+    const shippingDateInput = document.getElementById('shippingDate');
+    if (shippingDateInput) {
+        const today = new Date().toISOString().split('T')[0];
+        shippingDateInput.value = today;
     }
 }
 
@@ -438,6 +445,70 @@ function setupEventListeners() {
         clearSelectionBtn.addEventListener('click', clearAllSelections);
         console.log('清除選擇按鈕事件已設定');
     }
+    
+    // 出貨表相關按鈕
+    const addShippingBtn = document.getElementById('addShippingBtn');
+    const clearShippingFormBtn = document.getElementById('clearShippingFormBtn');
+    const refreshShippingListBtn = document.getElementById('refreshShippingListBtn');
+    const exportShippingBtn = document.getElementById('exportShippingBtn');
+    const clearAllShippingBtn = document.getElementById('clearAllShippingBtn');
+    const backToFunctionFromShippingBtn = document.getElementById('backToFunctionFromShippingBtn');
+    
+    if (addShippingBtn) {
+        addShippingBtn.addEventListener('click', addShippingRecord);
+        console.log('新增出貨記錄按鈕事件已設定');
+    }
+    
+    if (clearShippingFormBtn) {
+        clearShippingFormBtn.addEventListener('click', clearShippingForm);
+        console.log('清除出貨表單按鈕事件已設定');
+    }
+    
+    if (refreshShippingListBtn) {
+        refreshShippingListBtn.addEventListener('click', renderShippingList);
+        console.log('重新整理出貨清單按鈕事件已設定');
+    }
+    
+    if (exportShippingBtn) {
+        exportShippingBtn.addEventListener('click', exportShippingRecords);
+        console.log('匯出出貨記錄按鈕事件已設定');
+    }
+    
+    if (clearAllShippingBtn) {
+        clearAllShippingBtn.addEventListener('click', clearAllShippingRecords);
+        console.log('清除所有出貨記錄按鈕事件已設定');
+    }
+    
+    if (backToFunctionFromShippingBtn) {
+        backToFunctionFromShippingBtn.addEventListener('click', () => showPage('functionPage'));
+        console.log('出貨表返回功能頁面按鈕事件已設定');
+    }
+    
+    // 開箱明細相關按鈕
+    const searchUnboxingPoBtn = document.getElementById('searchUnboxingPoBtn');
+    const submitUnboxingBtn = document.getElementById('submitUnboxingBtn');
+    const clearUnboxingFormBtn = document.getElementById('clearUnboxingFormBtn');
+    const backToFunctionFromUnboxingBtn = document.getElementById('backToFunctionFromUnboxingBtn');
+    
+    if (searchUnboxingPoBtn) {
+        searchUnboxingPoBtn.addEventListener('click', searchUnboxingPoNumber);
+        console.log('查詢開箱採購單號按鈕事件已設定');
+    }
+    
+    if (submitUnboxingBtn) {
+        submitUnboxingBtn.addEventListener('click', submitUnboxingDetails);
+        console.log('提交開箱明細按鈕事件已設定');
+    }
+    
+    if (clearUnboxingFormBtn) {
+        clearUnboxingFormBtn.addEventListener('click', clearUnboxingForm);
+        console.log('清除開箱明細表單按鈕事件已設定');
+    }
+    
+    if (backToFunctionFromUnboxingBtn) {
+        backToFunctionFromUnboxingBtn.addEventListener('click', () => showPage('functionPage'));
+        console.log('開箱明細返回功能頁面按鈕事件已設定');
+    }
 
     // 訊息關閉
     const messageCloseBtn = document.getElementById('messageCloseBtn');
@@ -582,8 +653,10 @@ async function queryPoHeaderSheet(poNumber) {
     console.log('查詢 po_header 工作表，採購單號:', poNumber);
     
     try {
-        // 使用 Google Visualization API 查詢 po_header 工作表
-        const queryUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=po_header&tq=SELECT A,T WHERE A CONTAINS '${poNumber}'`;
+        // 使用 Google Visualization API 查詢 po_header 工作表，獲取採購單號、廠商名稱和進貨總數
+        const query = `SELECT A,C,T WHERE A CONTAINS '${poNumber}'`;
+        const encodedQuery = encodeURIComponent(query);
+        const queryUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=po_header&tq=${encodedQuery}`;
         
         console.log('查詢 URL:', queryUrl);
         
@@ -613,8 +686,9 @@ async function queryPoHeaderSheet(poNumber) {
         const results = jsonData.table.rows.map(row => {
             const cells = row.c;
             return {
-                po_number: cells[0]?.v || '',  // A 欄位：採購單號
-                total_quantity: cells[1]?.v || 0  // T 欄位：到貨總數
+                po_number: cells[0]?.v || '',      // A 欄位：採購單號
+                supplier_name: cells[1]?.v || '',  // C 欄位：廠商名稱
+                total_quantity: cells[2]?.v || 0   // T 欄位：進貨總數
             };
         });
         
@@ -624,6 +698,107 @@ async function queryPoHeaderSheet(poNumber) {
     } catch (error) {
         console.error('查詢 po_header 工作表時發生錯誤:', error);
         throw error;
+    }
+}
+
+// 查詢 po_header 工作表，獲取 T 欄位進貨總數
+async function queryPurchaseDetailSheet(poNumber) {
+    console.log('查詢 po_header 工作表進貨總數，採購單號:', poNumber);
+    
+    try {
+        // 使用 Google Visualization API 查詢 po_header 工作表的 T 欄位（進貨總數）
+        const query = `SELECT T WHERE A CONTAINS '${poNumber}'`;
+        const encodedQuery = encodeURIComponent(query);
+        const queryUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=po_header&tq=${encodedQuery}`;
+        
+        console.log('查詢 URL:', queryUrl);
+        
+        const response = await fetch(queryUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const text = await response.text();
+        console.log('原始回應:', text.substring(0, 500));
+        
+        // 解析 Google Visualization API 回應
+        const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\((.*)\)/);
+        if (!jsonMatch) {
+            throw new Error('無法解析 Google Visualization API 回應');
+        }
+        
+        const jsonData = JSON.parse(jsonMatch[1]);
+        console.log('解析後的資料:', jsonData);
+        
+        if (!jsonData.table || !jsonData.table.rows || jsonData.table.rows.length === 0) {
+            console.log('沒有找到符合的資料');
+            return 0;
+        }
+        
+        // 獲取 T 欄位的進貨總數
+        const totalQuantity = jsonData.table.rows[0].c[0]?.v || 0;
+        console.log('進貨總數:', totalQuantity);
+        return totalQuantity;
+        
+    } catch (error) {
+        console.error('查詢 po_header 工作表進貨總數時發生錯誤:', error);
+        throw error;
+    }
+}
+
+// 查詢廠商代碼
+async function querySupplierCode(supplierName) {
+    console.log('查詢廠商代碼，廠商名稱:', supplierName);
+    
+    try {
+        // 使用 Google Visualization API 查詢 supplier_contacts 工作表
+        // 先獲取所有資料，然後在 JavaScript 中進行過濾
+        const query = `SELECT A,B`;
+        const encodedQuery = encodeURIComponent(query);
+        const queryUrl = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=supplier_contacts&tq=${encodedQuery}`;
+        
+        console.log('查詢 URL:', queryUrl);
+        
+        const response = await fetch(queryUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const text = await response.text();
+        console.log('原始回應:', text.substring(0, 500));
+        
+        // 解析 Google Visualization API 回應
+        const jsonMatch = text.match(/google\.visualization\.Query\.setResponse\((.*)\)/);
+        if (!jsonMatch) {
+            throw new Error('無法解析 Google Visualization API 回應');
+        }
+        
+        const jsonData = JSON.parse(jsonMatch[1]);
+        console.log('解析後的資料:', jsonData);
+        
+        if (!jsonData.table || !jsonData.table.rows) {
+            console.log('沒有找到資料');
+            return '000'; // 預設代碼
+        }
+        
+        // 在 JavaScript 中過濾廠商名稱
+        for (let row of jsonData.table.rows) {
+            const cells = row.c;
+            const code = cells[0]?.v || '';
+            const name = cells[1]?.v || '';
+            
+            if (name && name.includes(supplierName)) {
+                console.log('找到廠商代碼:', code, '廠商名稱:', name);
+                return code;
+            }
+        }
+        
+        console.log('沒有找到符合的廠商代碼');
+        return '000'; // 預設代碼
+        
+    } catch (error) {
+        console.error('查詢廠商代碼時發生錯誤:', error);
+        return '000'; // 預設代碼
     }
 }
 
@@ -1192,9 +1367,52 @@ function saveAllEmployeeStatus() {
     showMessage('所有員工狀態變更已儲存');
 }
 
+// 出貨表相關變數
+let shippingRecords = [];
+
+// 開箱明細相關變數
+let unboxingRecords = [];
+let currentUnboxingPoNumber = '';
+let currentBatchNumber = '';
+let currentSupplierCode = '000'; // 廠商代碼
+let currentBatchCounter = 0; // 批號流水號計數器
+
 // 匯入功能相關變數
 let googleSheetsData = [];
 let selectedItems = new Set();
+
+// 導航到出貨表頁面
+function navigateToShipping() {
+    console.log('導航到出貨表頁面');
+    loadShippingRecords();
+    renderShippingList();
+    
+    // 自動填入登入的員工編號
+    const shippingPersonInput = document.getElementById('shippingPerson');
+    if (shippingPersonInput && currentUser) {
+        shippingPersonInput.value = currentUser;
+        console.log('自動填入出貨人員:', currentUser);
+    }
+    
+    showPage('shippingPage');
+}
+
+// 導航到開箱明細頁面
+function navigateToUnboxing() {
+    console.log('導航到開箱明細頁面');
+    // 延遲初始化，確保所有函數都已定義
+    setTimeout(() => {
+        if (typeof initializeUnboxingForm === 'function') {
+            initializeUnboxingForm();
+        } else {
+            console.error('initializeUnboxingForm 函數未定義');
+            showMessage('系統錯誤：開箱明細功能初始化失敗');
+        }
+    }, 100);
+    showPage('unboxingPage');
+}
+
+
 
 // 導航到匯入頁面
 function navigateToImport() {
@@ -1547,4 +1765,778 @@ async function importSelectedData() {
     }
 }
 
-console.log('JavaScript檔案載入完成'); 
+console.log('JavaScript檔案載入完成');
+
+// 出貨表相關函數
+
+// 載入出貨記錄
+function loadShippingRecords() {
+    const savedRecords = localStorage.getItem('shippingRecords');
+    if (savedRecords) {
+        shippingRecords = JSON.parse(savedRecords);
+        console.log('載入出貨記錄:', shippingRecords);
+    } else {
+        shippingRecords = [];
+        console.log('初始化出貨記錄陣列');
+    }
+}
+
+// 儲存出貨記錄
+function saveShippingRecords() {
+    localStorage.setItem('shippingRecords', JSON.stringify(shippingRecords));
+    console.log('出貨記錄已儲存');
+}
+
+// 新增出貨記錄
+function addShippingRecord() {
+    console.log('新增出貨記錄');
+    
+    const shippingDate = document.getElementById('shippingDate').value;
+    const shippingPrice = parseFloat(document.getElementById('shippingPrice').value);
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const orderNumber = document.getElementById('orderNumber').value.trim();
+    const shippingTarget = document.getElementById('shippingTarget').value.trim();
+    const shippingPerson = document.getElementById('shippingPerson').value.trim();
+    const shippingNotes = document.getElementById('shippingNotes').value.trim();
+    
+    // 驗證必填欄位
+    if (!shippingDate || !shippingPrice || !paymentMethod || !orderNumber || !shippingTarget || !shippingPerson) {
+        showMessage('請填寫所有必填欄位');
+        return;
+    }
+    
+    // 驗證價格
+    if (shippingPrice <= 0) {
+        showMessage('出貨價格必須大於0');
+        return;
+    }
+    
+    // 檢查訂單編號是否重複
+    const existingRecord = shippingRecords.find(record => record.orderNumber === orderNumber);
+    if (existingRecord) {
+        showMessage('訂單編號已存在，請使用不同的編號');
+        return;
+    }
+    
+    // 創建新出貨記錄
+    const newRecord = {
+        id: Date.now().toString(), // 使用時間戳作為唯一ID
+        shippingDate: shippingDate,
+        shippingPrice: shippingPrice,
+        paymentMethod: paymentMethod,
+        orderNumber: orderNumber,
+        shippingTarget: shippingTarget,
+        shippingPerson: shippingPerson,
+        shippingNotes: shippingNotes,
+        createDate: new Date().toISOString().split('T')[0]
+    };
+    
+    // 添加到記錄陣列
+    shippingRecords.push(newRecord);
+    
+    // 儲存到 localStorage
+    saveShippingRecords();
+    
+    console.log('出貨記錄新增成功:', newRecord);
+    showMessage(`出貨記錄新增成功！訂單編號：${orderNumber}`);
+    
+    // 清空表單並重新渲染清單
+    clearShippingForm();
+    renderShippingList();
+}
+
+// 清除出貨表單
+function clearShippingForm() {
+    document.getElementById('shippingDate').value = '';
+    document.getElementById('shippingPrice').value = '';
+    document.getElementById('paymentMethod').value = '';
+    document.getElementById('orderNumber').value = '';
+    document.getElementById('shippingTarget').value = '';
+    document.getElementById('shippingNotes').value = '';
+    
+    // 設定今天的日期為預設值
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('shippingDate').value = today;
+    
+    // 保持出貨人員為登入的員工編號
+    const shippingPersonInput = document.getElementById('shippingPerson');
+    if (shippingPersonInput && currentUser) {
+        shippingPersonInput.value = currentUser;
+    }
+    
+    console.log('出貨表單已清除（保留出貨人員）');
+}
+
+// 渲染出貨清單
+function renderShippingList() {
+    console.log('渲染出貨清單');
+    const tbody = document.getElementById('shippingListBody');
+    if (!tbody) {
+        console.error('找不到出貨清單表格主體');
+        return;
+    }
+    
+    // 清空現有內容
+    tbody.innerHTML = '';
+    
+    if (shippingRecords.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: #666;">尚無出貨記錄</td></tr>';
+        return;
+    }
+    
+    // 按出庫日期排序（最新的在前）
+    const sortedRecords = [...shippingRecords].sort((a, b) => new Date(b.shippingDate) - new Date(a.shippingDate));
+    
+    sortedRecords.forEach((record, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${record.shippingDate}</td>
+            <td>$${record.shippingPrice.toLocaleString()}</td>
+            <td>${record.paymentMethod}</td>
+            <td>${record.orderNumber}</td>
+            <td>${record.shippingTarget}</td>
+            <td>${record.shippingPerson}</td>
+            <td>${record.shippingNotes || '-'}</td>
+            <td>
+                <button class="shipping-action-btn shipping-edit-btn" onclick="editShippingRecord('${record.id}')">編輯</button>
+                <button class="shipping-action-btn shipping-delete-btn" onclick="deleteShippingRecord('${record.id}')">刪除</button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    });
+    
+    console.log('出貨清單渲染完成，共', shippingRecords.length, '筆記錄');
+}
+
+// 編輯出貨記錄
+function editShippingRecord(recordId) {
+    console.log('編輯出貨記錄:', recordId);
+    
+    const record = shippingRecords.find(r => r.id === recordId);
+    if (!record) {
+        showMessage('找不到要編輯的記錄');
+        return;
+    }
+    
+    // 填充表單
+    document.getElementById('shippingDate').value = record.shippingDate;
+    document.getElementById('shippingPrice').value = record.shippingPrice;
+    document.getElementById('paymentMethod').value = record.paymentMethod;
+    document.getElementById('orderNumber').value = record.orderNumber;
+    document.getElementById('shippingTarget').value = record.shippingTarget;
+    document.getElementById('shippingPerson').value = record.shippingPerson;
+    document.getElementById('shippingNotes').value = record.shippingNotes;
+    
+    // 變更按鈕文字和功能
+    const addBtn = document.getElementById('addShippingBtn');
+    addBtn.textContent = '更新記錄';
+    addBtn.onclick = () => updateShippingRecord(recordId);
+    
+    showMessage('請修改資料後點擊「更新記錄」');
+}
+
+// 更新出貨記錄
+function updateShippingRecord(recordId) {
+    console.log('更新出貨記錄:', recordId);
+    
+    const shippingDate = document.getElementById('shippingDate').value;
+    const shippingPrice = parseFloat(document.getElementById('shippingPrice').value);
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const orderNumber = document.getElementById('orderNumber').value.trim();
+    const shippingTarget = document.getElementById('shippingTarget').value.trim();
+    const shippingPerson = document.getElementById('shippingPerson').value.trim();
+    const shippingNotes = document.getElementById('shippingNotes').value.trim();
+    
+    // 驗證必填欄位
+    if (!shippingDate || !shippingPrice || !paymentMethod || !orderNumber || !shippingTarget || !shippingPerson) {
+        showMessage('請填寫所有必填欄位');
+        return;
+    }
+    
+    // 驗證價格
+    if (shippingPrice <= 0) {
+        showMessage('出貨價格必須大於0');
+        return;
+    }
+    
+    // 檢查訂單編號是否重複（排除自己）
+    const existingRecord = shippingRecords.find(record => record.orderNumber === orderNumber && record.id !== recordId);
+    if (existingRecord) {
+        showMessage('訂單編號已存在，請使用不同的編號');
+        return;
+    }
+    
+    // 更新記錄
+    const recordIndex = shippingRecords.findIndex(r => r.id === recordId);
+    if (recordIndex !== -1) {
+        shippingRecords[recordIndex] = {
+            ...shippingRecords[recordIndex],
+            shippingDate: shippingDate,
+            shippingPrice: shippingPrice,
+            paymentMethod: paymentMethod,
+            orderNumber: orderNumber,
+            shippingTarget: shippingTarget,
+            shippingPerson: shippingPerson,
+            shippingNotes: shippingNotes
+        };
+        
+        // 儲存到 localStorage
+        saveShippingRecords();
+        
+        console.log('出貨記錄更新成功');
+        showMessage(`出貨記錄更新成功！訂單編號：${orderNumber}`);
+        
+        // 重置表單並重新渲染清單
+        clearShippingForm();
+        renderShippingList();
+        
+        // 恢復按鈕
+        const addBtn = document.getElementById('addShippingBtn');
+        addBtn.textContent = '新增出貨記錄';
+        addBtn.onclick = addShippingRecord;
+    }
+}
+
+// 刪除出貨記錄
+function deleteShippingRecord(recordId) {
+    console.log('刪除出貨記錄:', recordId);
+    
+    if (confirm('確定要刪除這筆出貨記錄嗎？此操作無法復原。')) {
+        const recordIndex = shippingRecords.findIndex(r => r.id === recordId);
+        if (recordIndex !== -1) {
+            const deletedRecord = shippingRecords.splice(recordIndex, 1)[0];
+            
+            // 儲存到 localStorage
+            saveShippingRecords();
+            
+            console.log('出貨記錄刪除成功:', deletedRecord);
+            showMessage(`出貨記錄已刪除！訂單編號：${deletedRecord.orderNumber}`);
+            
+            // 重新渲染清單
+            renderShippingList();
+        }
+    }
+}
+
+// 匯出出貨記錄為Excel
+function exportShippingRecords() {
+    console.log('匯出出貨記錄');
+    
+    if (shippingRecords.length === 0) {
+        showMessage('尚無出貨記錄可匯出');
+        return;
+    }
+    
+    // 準備CSV資料
+    const headers = ['出庫日期', '出貨價格', '付款方式', '訂單編號', '出貨對象', '出貨人員', '備註', '建立日期'];
+    const csvData = [headers];
+    
+    // 按出庫日期排序
+    const sortedRecords = [...shippingRecords].sort((a, b) => new Date(a.shippingDate) - new Date(b.shippingDate));
+    
+    sortedRecords.forEach(record => {
+        csvData.push([
+            record.shippingDate,
+            record.shippingPrice,
+            record.paymentMethod,
+            record.orderNumber,
+            record.shippingTarget,
+            record.shippingPerson,
+            record.shippingNotes || '',
+            record.createDate
+        ]);
+    });
+    
+    // 轉換為CSV格式
+    const csvContent = csvData.map(row => row.map(cell => `"${cell}"`).join(',')).join('\n');
+    
+    // 建立並下載檔案
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `出貨記錄_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    console.log('出貨記錄匯出完成');
+    showMessage('出貨記錄已匯出為Excel檔案');
+}
+
+// 清除所有出貨記錄
+function clearAllShippingRecords() {
+    console.log('清除所有出貨記錄');
+    
+    if (shippingRecords.length === 0) {
+        showMessage('尚無出貨記錄可清除');
+        return;
+    }
+    
+    if (confirm(`確定要清除所有 ${shippingRecords.length} 筆出貨記錄嗎？此操作無法復原。`)) {
+        shippingRecords = [];
+        saveShippingRecords();
+        renderShippingList();
+        
+        console.log('所有出貨記錄已清除');
+        showMessage('所有出貨記錄已清除');
+    }
+}
+
+// 開箱明細相關函數
+
+// 初始化開箱明細表單
+function initializeUnboxingForm() {
+    console.log('初始化開箱明細表單');
+    
+    // 設定開箱人員（登入員工編號）
+    const unboxingPersonSpan = document.getElementById('unboxingPerson');
+    if (unboxingPersonSpan && currentUser) {
+        unboxingPersonSpan.textContent = currentUser;
+    }
+    
+    // 設定開箱日期（今天）
+    const unboxingDateSpan = document.getElementById('unboxingDate');
+    if (unboxingDateSpan) {
+        const today = new Date().toISOString().split('T')[0];
+        unboxingDateSpan.textContent = today;
+    }
+    
+    // 生成批號匹配（流水號）
+    generateBatchNumber();
+    
+    // 生成20個商品項目
+    generateUnboxingItems();
+    
+    console.log('開箱明細表單初始化完成');
+}
+
+// 生成批號匹配
+function generateBatchNumber() {
+    const timestamp = Date.now();
+    const random = Math.floor(Math.random() * 1000);
+    currentBatchNumber = `B${timestamp}${random}`;
+    
+    console.log('生成批號匹配:', currentBatchNumber);
+}
+
+// 生成20個商品項目
+function generateUnboxingItems() {
+    console.log('生成20個商品項目');
+    const tbody = document.getElementById('unboxingItemsBody');
+    if (!tbody) {
+        console.error('找不到開箱項目表格主體');
+        return;
+    }
+    
+    // 清空現有內容
+    tbody.innerHTML = '';
+    
+    // 生成20個商品項目
+    for (let i = 1; i <= 20; i++) {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${i}</td>
+            <td>
+                <select class="product-category-select" data-index="${i}">
+                    <option value="">請選擇分類</option>
+                    <option value="手機">手機</option>
+                    <option value="平板">平板</option>
+                    <option value="筆電">筆電</option>
+                    <option value="手錶">手錶</option>
+                </select>
+            </td>
+            <td>
+                <input type="text" class="product-serial-input" data-index="${i}" placeholder="請輸入商品序號" maxlength="50">
+            </td>
+            <td>
+                <span class="item-batch-number" data-index="${i}">-</span>
+            </td>
+        `;
+        tbody.appendChild(row);
+    }
+    
+    // 為商品序號輸入框添加事件監聽器
+    setupSerialInputListeners();
+    
+    console.log('20個商品項目生成完成');
+}
+
+// 為每個項目生成獨立的批號
+function generateItemBatchNumber(itemIndex) {
+    // 使用廠商代碼 + 6位數字流水號
+    currentBatchCounter++;
+    const sequenceNumber = currentBatchCounter.toString().padStart(6, '0');
+    return `${currentSupplierCode}${sequenceNumber}`;
+}
+
+// 設置商品序號輸入框的事件監聽器
+function setupSerialInputListeners() {
+    const serialInputs = document.querySelectorAll('.product-serial-input');
+    
+    serialInputs.forEach(input => {
+        input.addEventListener('input', function() {
+            const index = this.getAttribute('data-index');
+            const serialValue = this.value.trim();
+            const batchNumberSpan = document.querySelector(`.item-batch-number[data-index="${index}"]`);
+            
+            if (serialValue) {
+                // 有商品序號時，產生批號
+                const itemBatchNumber = generateItemBatchNumber(parseInt(index));
+                batchNumberSpan.textContent = itemBatchNumber;
+                batchNumberSpan.style.color = '#007bff';
+            } else {
+                // 沒有商品序號時，清空批號
+                batchNumberSpan.textContent = '-';
+                batchNumberSpan.style.color = '#6c757d';
+            }
+        });
+    });
+}
+
+// 查詢開箱採購單號
+async function searchUnboxingPoNumber() {
+    console.log('查詢開箱採購單號');
+    
+    const poNumber = document.getElementById('unboxingPoNumber').value.trim();
+    
+    if (!poNumber) {
+        showMessage('請輸入採購單號');
+        return;
+    }
+    
+    showLoading(true);
+    
+    try {
+        // 使用與點到貨相同的查詢邏輯
+        const poHeaderData = await queryPoHeaderSheet(poNumber);
+        
+        if (poHeaderData.length > 0) {
+            currentUnboxingPoNumber = poNumber;
+            
+            // 獲取廠商資訊
+            const supplierName = poHeaderData[0].supplier_name;
+            const totalQuantity = poHeaderData[0].total_quantity;
+            
+            console.log('獲取到的廠商資訊:', {
+                supplierName: supplierName,
+                totalQuantity: totalQuantity,
+                poHeaderData: poHeaderData[0]
+            });
+            
+            // 更新採購單號顯示
+            const currentPoNumberSpan = document.getElementById('currentPoNumber');
+            if (currentPoNumberSpan) {
+                currentPoNumberSpan.textContent = poNumber;
+                console.log('更新採購單號顯示:', poNumber);
+            }
+            
+            // 更新進貨廠商顯示
+            const supplierNameSpan = document.getElementById('supplierName');
+            console.log('找到 supplierName 元素:', supplierNameSpan);
+            if (supplierNameSpan) {
+                supplierNameSpan.textContent = supplierName || '-';
+                console.log('更新進貨廠商顯示:', supplierName || '-');
+            } else {
+                console.error('找不到 supplierName 元素');
+            }
+            
+            // 更新需開箱數量顯示
+            const requiredCountSpan = document.getElementById('requiredUnboxingCount');
+            if (requiredCountSpan) {
+                requiredCountSpan.textContent = totalQuantity || 0;
+                console.log('更新需開箱數量顯示:', totalQuantity || 0);
+            }
+            
+            // 查詢廠商代碼
+            try {
+                currentSupplierCode = await querySupplierCode(supplierName);
+                console.log('廠商代碼查詢成功:', currentSupplierCode);
+                
+                // 重置批號計數器
+                currentBatchCounter = 0;
+                
+            } catch (supplierError) {
+                console.error('查詢廠商代碼時發生錯誤:', supplierError);
+                currentSupplierCode = '000'; // 使用預設代碼
+                currentBatchCounter = 0;
+            }
+            
+            showMessage(`採購單號 ${poNumber} 查詢成功，廠商：${supplierName}，需開箱數量：${totalQuantity}`);
+            console.log('開箱採購單號查詢成功:', poNumber);
+        } else {
+            showMessage('無此採購單號');
+        }
+        
+    } catch (error) {
+        console.error('查詢開箱採購單號時發生錯誤:', error);
+        showMessage('查詢時發生錯誤，請稍後再試');
+    } finally {
+        showLoading(false);
+    }
+}
+
+// 提交開箱明細
+async function submitUnboxingDetails() {
+    console.log('提交開箱明細');
+    
+    // 驗證採購單號
+    if (!currentUnboxingPoNumber) {
+        showMessage('請先查詢採購單號');
+        return;
+    }
+    
+    // 收集商品資料
+    const items = [];
+    let hasData = false;
+    
+    for (let i = 1; i <= 20; i++) {
+        const categorySelect = document.querySelector(`.product-category-select[data-index="${i}"]`);
+        const serialInput = document.querySelector(`.product-serial-input[data-index="${i}"]`);
+        const batchNumberSpan = document.querySelector(`.item-batch-number[data-index="${i}"]`);
+        
+        if (categorySelect && serialInput && batchNumberSpan) {
+            const category = categorySelect.value;
+            const serial = serialInput.value.trim();
+            const itemBatchNumber = batchNumberSpan.textContent;
+            
+            // 只有當有商品序號時才收集資料
+            if (serial) {
+                if (category) {
+                    items.push({
+                        index: i,
+                        category: category,
+                        serial: serial,
+                        itemBatchNumber: itemBatchNumber !== '-' ? itemBatchNumber : generateItemBatchNumber(i)
+                    });
+                    hasData = true;
+                } else {
+                    showMessage(`項目 ${i} 請選擇商品分類`);
+                    return;
+                }
+            }
+        }
+    }
+    
+    if (!hasData) {
+        showMessage('請至少填寫一項商品資料');
+        return;
+    }
+    
+    // 創建開箱記錄
+    const unboxingRecord = {
+        id: Date.now().toString(),
+        poNumber: currentUnboxingPoNumber,
+        unboxingPerson: currentUser,
+        unboxingDate: new Date().toISOString().split('T')[0],
+        batchNumber: currentBatchNumber,
+        items: items,
+        createDate: new Date().toISOString().split('T')[0]
+    };
+    
+    // 添加到記錄陣列
+    unboxingRecords.push(unboxingRecord);
+    
+    // 儲存到 localStorage
+    saveUnboxingRecords();
+    
+    // 準備寫入 Google Sheets 的資料
+    const googleSheetsData = {
+        type: 'unboxing',
+        poNumber: currentUnboxingPoNumber,
+        unboxingPerson: currentUser,
+        unboxingDate: new Date().toISOString().split('T')[0],
+        items: items
+    };
+    
+    // 嘗試寫入 Google Sheets
+    try {
+        await writeToGoogleSheet(googleSheetsData, '開箱明細');
+        console.log('開箱明細提交成功並已寫入 Google Sheets:', unboxingRecord);
+        showMessage(`開箱明細提交成功！共 ${items.length} 項商品，已寫入 Google Sheets`);
+    } catch (error) {
+        console.log('開箱明細提交成功，但寫入 Google Sheets 失敗:', unboxingRecord);
+        showMessage(`開箱明細提交成功！共 ${items.length} 項商品（Google Sheets 寫入失敗，請稍後重試）`);
+    }
+    
+    // 清空表單並重新初始化
+    clearUnboxingForm();
+    initializeUnboxingForm();
+}
+
+// 清除開箱明細表單
+function clearUnboxingForm() {
+    console.log('清除開箱明細表單');
+    
+    // 清空採購單號
+    document.getElementById('unboxingPoNumber').value = '';
+    document.getElementById('currentPoNumber').textContent = '-';
+    currentUnboxingPoNumber = '';
+    
+    // 清空進貨廠商
+    const supplierNameSpan = document.getElementById('supplierName');
+    if (supplierNameSpan) {
+        supplierNameSpan.textContent = '-';
+    }
+    
+    // 清空需開箱數量
+    const requiredCountSpan = document.getElementById('requiredUnboxingCount');
+    if (requiredCountSpan) {
+        requiredCountSpan.textContent = '-';
+    }
+    
+    // 重置廠商代碼和批號計數器
+    currentSupplierCode = '000';
+    currentBatchCounter = 0;
+    
+    // 清空商品資料
+    const categorySelects = document.querySelectorAll('.product-category-select');
+    const serialInputs = document.querySelectorAll('.product-serial-input');
+    
+    categorySelects.forEach(select => {
+        select.value = '';
+    });
+    
+    serialInputs.forEach(input => {
+        input.value = '';
+    });
+    
+    // 清空批號顯示
+    const batchNumberSpans = document.querySelectorAll('.item-batch-number');
+    batchNumberSpans.forEach(span => {
+        span.textContent = '-';
+        span.style.color = '#6c757d';
+    });
+    
+    console.log('開箱明細表單已清除');
+}
+
+// 儲存開箱記錄
+function saveUnboxingRecords() {
+    localStorage.setItem('unboxingRecords', JSON.stringify(unboxingRecords));
+    console.log('開箱記錄已儲存');
+}
+
+// 載入開箱記錄
+function loadUnboxingRecords() {
+    const savedRecords = localStorage.getItem('unboxingRecords');
+    if (savedRecords) {
+        unboxingRecords = JSON.parse(savedRecords);
+        console.log('載入開箱記錄:', unboxingRecords);
+    } else {
+        unboxingRecords = [];
+        console.log('初始化開箱記錄陣列');
+    }
+}
+
+// 寫入資料到 Google Sheets
+async function writeToGoogleSheet(data, sheetName = '開箱明細') {
+    console.log('準備寫入 Google Sheets:', data);
+    console.log('目標工作表:', sheetName);
+    
+    try {
+        // 檢查是否有 Google Sheets API 權限
+        if (!window.gapi || !window.gapi.auth2) {
+            throw new Error('Google Sheets API 未初始化');
+        }
+        
+        // 檢查用戶是否已登入
+        const authInstance = window.gapi.auth2.getAuthInstance();
+        if (!authInstance.isSignedIn.get()) {
+            throw new Error('請先登入 Google 帳戶');
+        }
+        
+        // 準備要寫入的資料
+        const values = [];
+        
+        // 如果是開箱明細資料
+        if (data.type === 'unboxing') {
+            const unboxingData = data.items;
+            unboxingData.forEach(item => {
+                values.push([
+                    data.poNumber,           // 採購單號
+                    item.category,           // 商品分類
+                    item.serial,             // 商品序號
+                    item.itemBatchNumber,    // 批號
+                    data.unboxingPerson,     // 開箱人員
+                    data.unboxingDate,       // 開箱日期
+                    new Date().toISOString() // 建立時間
+                ]);
+            });
+        }
+        // 如果是點到貨資料
+        else if (data.type === 'receiving') {
+            data.serialNumbers.forEach(serial => {
+                values.push([
+                    data.poNumber,           // 採購單號
+                    '',                      // 商品分類（留空）
+                    serial,                  // 商品序號
+                    data.receivingPerson,    // 到貨人員
+                    data.receivingDate,      // 到貨日期
+                    new Date().toISOString() // 建立時間
+                ]);
+            });
+        }
+        
+        // 使用 Google Sheets API 寫入資料
+        const response = await gapi.client.sheets.spreadsheets.values.append({
+            spreadsheetId: SPREADSHEET_ID,
+            range: `${sheetName}!A:G`,
+            valueInputOption: 'RAW',
+            insertDataOption: 'INSERT_ROWS',
+            resource: {
+                values: values
+            }
+        });
+        
+        console.log('成功寫入 Google Sheets:', response);
+        showMessage(`成功寫入 ${values.length} 筆資料到 ${sheetName} 工作表`);
+        
+        return response;
+        
+    } catch (error) {
+        console.error('寫入 Google Sheets 時發生錯誤:', error);
+        
+        if (error.message.includes('Google Sheets API 未初始化')) {
+            showMessage('請先初始化 Google Sheets API');
+        } else if (error.message.includes('請先登入 Google 帳戶')) {
+            showMessage('請先登入 Google 帳戶');
+        } else {
+            showMessage('寫入 Google Sheets 失敗，請檢查權限設定');
+        }
+        
+        throw error;
+    }
+}
+
+// 初始化 Google Sheets API
+async function initializeGoogleSheetsAPI() {
+    console.log('初始化 Google Sheets API');
+    
+    try {
+        // 載入 Google API 客戶端
+        await new Promise((resolve, reject) => {
+            gapi.load('client:auth2', {
+                callback: resolve,
+                onerror: reject
+            });
+        });
+        
+        // 初始化 API 客戶端
+        await gapi.client.init({
+            apiKey: GOOGLE_SHEETS_CONFIG.API_KEY,
+            clientId: GOOGLE_SHEETS_CONFIG.CLIENT_ID,
+            discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+            scope: GOOGLE_SHEETS_CONFIG.SCOPES.join(' ')
+        });
+        
+        console.log('Google Sheets API 初始化成功');
+        
+    } catch (error) {
+        console.error('初始化 Google Sheets API 失敗:', error);
+        throw error;
+    }
+}
+
+ 

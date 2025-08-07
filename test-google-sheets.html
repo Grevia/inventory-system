@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Sheets 連線測試</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://apis.google.com/js/api.js"></script>
+    <script src="config.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>Google Sheets 連線測試</h1>
+        
+        <div class="test-section">
+            <h2>1. 初始化 Google Sheets API</h2>
+            <button id="initBtn" class="btn-primary">初始化 API</button>
+            <div id="initStatus" class="status">未初始化</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. 登入 Google 帳戶</h2>
+            <button id="loginBtn" class="btn-primary" disabled>登入</button>
+            <div id="loginStatus" class="status">未登入</div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. 測試讀取資料</h2>
+            <button id="readBtn" class="btn-primary" disabled>讀取測試資料</button>
+            <div id="readStatus" class="status">未測試</div>
+            <div id="readResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. 測試寫入資料</h2>
+            <button id="writeBtn" class="btn-primary" disabled>寫入測試資料</button>
+            <div id="writeStatus" class="status">未測試</div>
+            <div id="writeResult" class="result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>5. 設定檢查</h2>
+            <div id="configCheck" class="config-check">
+                <p><strong>SPREADSHEET_ID:</strong> <span id="spreadsheetId">檢查中...</span></p>
+                <p><strong>API_KEY:</strong> <span id="apiKey">檢查中...</span></p>
+                <p><strong>CLIENT_ID:</strong> <span id="clientId">檢查中...</span></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 檢查配置
+        function checkConfig() {
+            const spreadsheetId = document.getElementById('spreadsheetId');
+            const apiKey = document.getElementById('apiKey');
+            const clientId = document.getElementById('clientId');
+            
+            if (typeof GOOGLE_SHEETS_CONFIG !== 'undefined') {
+                spreadsheetId.textContent = GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID || '未設定';
+                apiKey.textContent = GOOGLE_SHEETS_CONFIG.API_KEY || '未設定';
+                clientId.textContent = GOOGLE_SHEETS_CONFIG.CLIENT_ID || '未設定';
+                
+                // 檢查是否為預設值
+                if (GOOGLE_SHEETS_CONFIG.API_KEY === 'YOUR_API_KEY_HERE') {
+                    apiKey.style.color = 'red';
+                    apiKey.textContent += ' (需要設定)';
+                }
+                if (GOOGLE_SHEETS_CONFIG.CLIENT_ID === 'YOUR_CLIENT_ID_HERE') {
+                    clientId.style.color = 'red';
+                    clientId.textContent += ' (需要設定)';
+                }
+            } else {
+                spreadsheetId.textContent = '配置檔案未載入';
+                apiKey.textContent = '配置檔案未載入';
+                clientId.textContent = '配置檔案未載入';
+            }
+        }
+        
+        // 初始化 Google Sheets API
+        async function initializeAPI() {
+            const initBtn = document.getElementById('initBtn');
+            const initStatus = document.getElementById('initStatus');
+            const loginBtn = document.getElementById('loginBtn');
+            
+            try {
+                initBtn.disabled = true;
+                initStatus.textContent = '初始化中...';
+                
+                await new Promise((resolve, reject) => {
+                    gapi.load('client:auth2', {
+                        callback: resolve,
+                        onerror: reject
+                    });
+                });
+                
+                await gapi.client.init({
+                    apiKey: GOOGLE_SHEETS_CONFIG.API_KEY,
+                    clientId: GOOGLE_SHEETS_CONFIG.CLIENT_ID,
+                    discoveryDocs: ['https://sheets.googleapis.com/$discovery/rest?version=v4'],
+                    scope: GOOGLE_SHEETS_CONFIG.SCOPES.join(' ')
+                });
+                
+                initStatus.textContent = '初始化成功';
+                initStatus.style.color = 'green';
+                loginBtn.disabled = false;
+                
+            } catch (error) {
+                initStatus.textContent = '初始化失敗: ' + error.message;
+                initStatus.style.color = 'red';
+                console.error('初始化失敗:', error);
+            }
+        }
+        
+        // 登入 Google 帳戶
+        async function login() {
+            const loginBtn = document.getElementById('loginBtn');
+            const loginStatus = document.getElementById('loginStatus');
+            const readBtn = document.getElementById('readBtn');
+            const writeBtn = document.getElementById('writeBtn');
+            
+            try {
+                loginBtn.disabled = true;
+                loginStatus.textContent = '登入中...';
+                
+                const authInstance = gapi.auth2.getAuthInstance();
+                await authInstance.signIn();
+                
+                loginStatus.textContent = '登入成功';
+                loginStatus.style.color = 'green';
+                readBtn.disabled = false;
+                writeBtn.disabled = false;
+                
+            } catch (error) {
+                loginStatus.textContent = '登入失敗: ' + error.message;
+                loginStatus.style.color = 'red';
+                console.error('登入失敗:', error);
+            }
+        }
+        
+        // 測試讀取資料
+        async function testRead() {
+            const readBtn = document.getElementById('readBtn');
+            const readStatus = document.getElementById('readStatus');
+            const readResult = document.getElementById('readResult');
+            
+            try {
+                readBtn.disabled = true;
+                readStatus.textContent = '讀取中...';
+                
+                const response = await gapi.client.sheets.spreadsheets.values.get({
+                    spreadsheetId: GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID,
+                    range: 'po_header!A1:T5'
+                });
+                
+                readStatus.textContent = '讀取成功';
+                readStatus.style.color = 'green';
+                readResult.innerHTML = '<pre>' + JSON.stringify(response.result, null, 2) + '</pre>';
+                
+            } catch (error) {
+                readStatus.textContent = '讀取失敗: ' + error.message;
+                readStatus.style.color = 'red';
+                readResult.innerHTML = '<p style="color: red;">錯誤: ' + error.message + '</p>';
+                console.error('讀取失敗:', error);
+            } finally {
+                readBtn.disabled = false;
+            }
+        }
+        
+        // 測試寫入資料
+        async function testWrite() {
+            const writeBtn = document.getElementById('writeBtn');
+            const writeStatus = document.getElementById('writeStatus');
+            const writeResult = document.getElementById('writeResult');
+            
+            try {
+                writeBtn.disabled = true;
+                writeStatus.textContent = '寫入中...';
+                
+                const testData = [
+                    ['測試採購單號', '測試商品分類', '測試序號', '測試批號', '測試人員', new Date().toISOString()]
+                ];
+                
+                const response = await gapi.client.sheets.spreadsheets.values.append({
+                    spreadsheetId: GOOGLE_SHEETS_CONFIG.SPREADSHEET_ID,
+                    range: '開箱明細!A:F',
+                    valueInputOption: 'RAW',
+                    insertDataOption: 'INSERT_ROWS',
+                    resource: {
+                        values: testData
+                    }
+                });
+                
+                writeStatus.textContent = '寫入成功';
+                writeStatus.style.color = 'green';
+                writeResult.innerHTML = '<p>成功寫入測試資料到開箱明細工作表</p><pre>' + JSON.stringify(response.result, null, 2) + '</pre>';
+                
+            } catch (error) {
+                writeStatus.textContent = '寫入失敗: ' + error.message;
+                writeStatus.style.color = 'red';
+                writeResult.innerHTML = '<p style="color: red;">錯誤: ' + error.message + '</p>';
+                console.error('寫入失敗:', error);
+            } finally {
+                writeBtn.disabled = false;
+            }
+        }
+        
+        // 事件監聽器
+        document.addEventListener('DOMContentLoaded', function() {
+            checkConfig();
+            
+            document.getElementById('initBtn').addEventListener('click', initializeAPI);
+            document.getElementById('loginBtn').addEventListener('click', login);
+            document.getElementById('readBtn').addEventListener('click', testRead);
+            document.getElementById('writeBtn').addEventListener('click', testWrite);
+        });
+    </script>
+    
+    <style>
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e9ecef;
+            border-radius: 10px;
+        }
+        
+        .test-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .config-check p {
+            margin: 5px 0;
+            padding: 5px;
+            background: #f8f9fa;
+            border-radius: 3px;
+        }
+        
+        .config-check span {
+            font-family: monospace;
+            color: #007bff;
+        }
+    </style>
+</body>
+</html> 
