@@ -197,21 +197,44 @@ function setupEventListeners() {
     const employeeIdInput = document.getElementById('employeeId');
     
     console.log('尋找登入按鈕:', loginBtn);
+    console.log('登入按鈕元素:', loginBtn ? loginBtn.outerHTML : 'null');
+    
     if (loginBtn) {
         try {
-            loginBtn.addEventListener('click', function(e) {
+            // 移除舊的事件監聽器（如果有的話）
+            loginBtn.removeEventListener('click', loginBtn._clickHandler);
+            
+            // 創建新的事件處理函數
+            loginBtn._clickHandler = function(e) {
                 console.log('登入按鈕被點擊');
                 e.preventDefault();
                 e.stopPropagation();
                 handleLogin();
-            });
+            };
+            
+            // 添加事件監聽器
+            loginBtn.addEventListener('click', loginBtn._clickHandler);
             loginBtn.setAttribute('data-has-listener', 'true');
             console.log('登入按鈕事件已設定');
+            
+            // 測試按鈕是否可點擊
+            loginBtn.style.cursor = 'pointer';
+            console.log('登入按鈕樣式已設定');
+            
         } catch (error) {
             console.error('設定登入按鈕事件時發生錯誤:', error);
         }
     } else {
         console.error('找不到登入按鈕');
+        // 嘗試延遲查找
+        setTimeout(() => {
+            const delayedLoginBtn = document.getElementById('loginBtn');
+            console.log('延遲查找登入按鈕:', delayedLoginBtn);
+            if (delayedLoginBtn) {
+                console.log('延遲找到登入按鈕，重新設定事件');
+                setupEventListeners();
+            }
+        }, 1000);
     }
     
     if (employeeIdInput) {
