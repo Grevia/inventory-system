@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登入測試</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .login-container {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .input-group {
+            margin-bottom: 15px;
+        }
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+        #message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>登入測試</h1>
+        <div class="input-group">
+            <label for="employeeId">員工編號：</label>
+            <input type="text" id="employeeId" placeholder="請輸入員工編號" maxlength="10">
+        </div>
+        <div>
+            <button id="loginBtn" class="btn btn-primary">登入</button>
+            <button id="employeeEditBtn" class="btn btn-secondary">員工資料編輯</button>
+        </div>
+        <div id="message"></div>
+    </div>
+
+    <script>
+        // 簡單的測試腳本
+        console.log('測試頁面載入完成');
+        
+        function showMessage(text, type = 'success') {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = type;
+            messageDiv.style.display = 'block';
+            
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 3000);
+        }
+        
+        function handleLogin() {
+            const employeeId = document.getElementById('employeeId').value.trim();
+            if (!employeeId) {
+                showMessage('請輸入員工編號', 'error');
+                return;
+            }
+            showMessage(`登入成功！員工編號：${employeeId}`);
+            console.log('登入按鈕被點擊，員工編號：', employeeId);
+        }
+        
+        function handleEmployeeEdit() {
+            showMessage('員工資料編輯功能');
+            console.log('員工資料編輯按鈕被點擊');
+        }
+        
+        // 設定事件監聽器
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM載入完成，設定事件監聽器');
+            
+            const loginBtn = document.getElementById('loginBtn');
+            const employeeEditBtn = document.getElementById('employeeEditBtn');
+            const employeeIdInput = document.getElementById('employeeId');
+            
+            console.log('找到登入按鈕:', loginBtn);
+            console.log('找到員工編輯按鈕:', employeeEditBtn);
+            
+            if (loginBtn) {
+                loginBtn.addEventListener('click', function(e) {
+                    console.log('登入按鈕被點擊');
+                    e.preventDefault();
+                    handleLogin();
+                });
+                console.log('登入按鈕事件已設定');
+            }
+            
+            if (employeeEditBtn) {
+                employeeEditBtn.addEventListener('click', function(e) {
+                    console.log('員工編輯按鈕被點擊');
+                    e.preventDefault();
+                    handleEmployeeEdit();
+                });
+                console.log('員工編輯按鈕事件已設定');
+            }
+            
+            if (employeeIdInput) {
+                employeeIdInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        handleLogin();
+                    }
+                });
+                console.log('員工編號輸入事件已設定');
+            }
+        });
+        
+        // 備用初始化
+        window.addEventListener('load', function() {
+            console.log('頁面完全載入');
+        });
+    </script>
+</body>
+</html> 
