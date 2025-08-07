@@ -117,6 +117,16 @@ function initializeApp() {
         console.log('訊息框已隱藏');
     }
     
+    // 初始化員工資料（重要：確保資料持久化）
+    loadEmployees();
+    console.log('員工資料初始化完成，共', employees.length, '筆資料');
+    
+    // 檢查員工資料完整性
+    checkAndRecoverEmployeeData();
+    
+    // 建立員工資料備份
+    createEmployeeDataBackup();
+    
     // 檢查是否有已登入的用戶
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
@@ -133,6 +143,15 @@ function initializeApp() {
         const today = new Date().toISOString().split('T')[0];
         shippingDateInput.value = today;
     }
+    
+    // 定期自動備份員工資料（每5分鐘）
+    setInterval(() => {
+        if (employees.length > 0) {
+            localStorage.setItem('employees', JSON.stringify(employees));
+            localStorage.setItem('employeeCounter', employeeCounter.toString());
+            console.log('自動備份員工資料完成');
+        }
+    }, 5 * 60 * 1000); // 5分鐘
 }
 
 // 設定事件監聽器
@@ -1197,7 +1216,7 @@ function handleAdminAuth() {
 function showEmployeeRegister() {
     console.log('顯示員工註冊頁面');
     
-    // 載入已儲存的員工資料
+    // 重新載入已儲存的員工資料（確保資料最新）
     loadEmployees();
     
     // 生成下一個員工編號
@@ -1210,41 +1229,78 @@ function showEmployeeRegister() {
     renderEmployeeList();
     
     showPage('employeeRegisterPage');
+    
+    // 顯示當前員工資料狀態
+    console.log('員工註冊頁面已載入，當前員工資料:', employees.length, '筆');
+    if (employees.length > 0) {
+        console.log('員工列表:', employees.map(emp => `${emp.id}: ${emp.name} (${emp.status})`));
+    }
 }
 
 // 載入員工資料
 function loadEmployees() {
+    console.log('開始載入員工資料');
+    
+    // 嘗試從 localStorage 載入員工資料
     const savedEmployees = localStorage.getItem('employees');
+    const savedEmployeeCounter = localStorage.getItem('employeeCounter');
+    
     if (savedEmployees) {
-        employees = JSON.parse(savedEmployees);
-        
-        // 為現有的員工資料添加狀態欄位（如果沒有）
-        let hasChanges = false;
-        employees.forEach(employee => {
-            if (!employee.status) {
-                employee.status = 'active'; // 預設為在職中
-                hasChanges = true;
+        try {
+            employees = JSON.parse(savedEmployees);
+            console.log('從 localStorage 載入員工資料成功:', employees.length, '筆資料');
+            
+            // 為現有的員工資料添加狀態欄位（如果沒有）
+            let hasChanges = false;
+            employees.forEach(employee => {
+                if (!employee.status) {
+                    employee.status = 'active'; // 預設為在職中
+                    hasChanges = true;
+                }
+            });
+            
+            // 如果有變更，重新儲存
+            if (hasChanges) {
+                localStorage.setItem('employees', JSON.stringify(employees));
+                console.log('已為現有員工資料添加狀態欄位');
             }
-        });
-        
-        // 如果有變更，重新儲存
-        if (hasChanges) {
-            localStorage.setItem('employees', JSON.stringify(employees));
-            console.log('已為現有員工資料添加狀態欄位');
+        } catch (error) {
+            console.error('解析員工資料時發生錯誤:', error);
+            employees = [];
         }
-        
-        // 找出最大的員工編號並設定下一個編號
+    } else {
+        console.log('localStorage 中沒有員工資料，初始化空陣列');
+        employees = [];
+    }
+    
+    // 載入或設定員工編號計數器
+    if (savedEmployeeCounter) {
+        try {
+            employeeCounter = parseInt(savedEmployeeCounter);
+            console.log('從 localStorage 載入員工編號計數器:', employeeCounter);
+        } catch (error) {
+            console.error('解析員工編號計數器時發生錯誤:', error);
+            employeeCounter = 1;
+        }
+    } else {
+        // 如果沒有儲存的計數器，根據現有員工資料計算
         if (employees.length > 0) {
             const maxId = Math.max(...employees.map(emp => {
                 const idNumber = parseInt(emp.id.replace('GR', ''));
                 return isNaN(idNumber) ? 0 : idNumber;
             }));
             employeeCounter = maxId + 1;
+            console.log('根據現有員工資料計算計數器:', employeeCounter);
         } else {
             employeeCounter = 1;
+            console.log('初始化員工編號計數器為 1');
         }
-        console.log('載入員工資料:', employees, '下一個編號:', employeeCounter);
+        
+        // 儲存計數器
+        localStorage.setItem('employeeCounter', employeeCounter.toString());
     }
+    
+    console.log('員工資料載入完成:', employees.length, '筆資料，下一個編號:', employeeCounter);
 }
 
 // 生成下一個員工編號
@@ -1306,8 +1362,9 @@ function registerEmployee() {
     // 儲存到 localStorage
     localStorage.setItem('employees', JSON.stringify(employees));
     
-    // 更新計數器
+    // 更新計數器並儲存
     employeeCounter++;
+    localStorage.setItem('employeeCounter', employeeCounter.toString());
     
     console.log('員工註冊成功:', newEmployee);
     showMessage(`員工註冊成功！員工編號：${employeeId}`);
@@ -1460,12 +1517,11 @@ function importEmployees(event) {
     
     const file = event.target.files[0];
     if (!file) {
-        console.log('沒有選擇檔案');
+        showMessage('請選擇要匯入的檔案');
         return;
     }
     
-    // 檢查檔案類型
-    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+    if (file.type !== 'application/json') {
         showMessage('請選擇 JSON 格式的檔案');
         return;
     }
@@ -1475,31 +1531,46 @@ function importEmployees(event) {
         try {
             const importData = JSON.parse(e.target.result);
             
-            // 驗證資料格式
+            // 檢查匯入資料格式
             if (!importData.employees || !Array.isArray(importData.employees)) {
-                throw new Error('檔案格式不正確，缺少員工資料陣列');
+                showMessage('匯入檔案格式錯誤：缺少員工資料陣列');
+                return;
             }
             
             // 確認是否要覆蓋現有資料
             if (employees.length > 0) {
-                const confirmed = confirm(`目前有 ${employees.length} 筆員工資料，匯入將會覆蓋現有資料。\n\n確定要匯入 ${importData.employees.length} 筆員工資料嗎？`);
-                if (!confirmed) {
-                    console.log('用戶取消匯入');
+                if (!confirm(`目前有 ${employees.length} 筆員工資料，匯入將會覆蓋現有資料。確定要繼續嗎？`)) {
                     return;
                 }
             }
             
-            // 匯入資料
+            // 匯入員工資料
             employees = importData.employees;
-            employeeCounter = importData.employeeCounter || 1;
+            
+            // 匯入員工編號計數器（如果有的話）
+            if (importData.employeeCounter) {
+                employeeCounter = parseInt(importData.employeeCounter);
+            } else {
+                // 如果沒有計數器，根據現有員工資料計算
+                if (employees.length > 0) {
+                    const maxId = Math.max(...employees.map(emp => {
+                        const idNumber = parseInt(emp.id.replace('GR', ''));
+                        return isNaN(idNumber) ? 0 : idNumber;
+                    }));
+                    employeeCounter = maxId + 1;
+                } else {
+                    employeeCounter = 1;
+                }
+            }
             
             // 儲存到 localStorage
             localStorage.setItem('employees', JSON.stringify(employees));
+            localStorage.setItem('employeeCounter', employeeCounter.toString());
             
             // 重新渲染員工清單
             renderEmployeeList();
             
-            console.log('員工資料匯入成功');
+            console.log('員工資料匯入成功:', employees.length, '筆資料');
             showMessage(`成功匯入 ${employees.length} 筆員工資料`);
             
         } catch (error) {
@@ -1510,8 +1581,93 @@ function importEmployees(event) {
     
     reader.readAsText(file);
     
-    // 清空檔案輸入，允許重複選擇同一檔案
+    // 清空檔案輸入框
     event.target.value = '';
+}
+
+// 檢查並恢復員工資料
+function checkAndRecoverEmployeeData() {
+    console.log('檢查員工資料完整性');
+    
+    const savedEmployees = localStorage.getItem('employees');
+    const savedEmployeeCounter = localStorage.getItem('employeeCounter');
+    
+    let needsRecovery = false;
+    let recoveryMessage = '';
+    
+    // 檢查員工資料是否存在
+    if (!savedEmployees) {
+        needsRecovery = true;
+        recoveryMessage += '員工資料遺失；';
+    }
+    
+    // 檢查計數器是否存在
+    if (!savedEmployeeCounter) {
+        needsRecovery = true;
+        recoveryMessage += '員工編號計數器遺失；';
+    }
+    
+    // 如果有資料，檢查資料完整性
+    if (savedEmployees) {
+        try {
+            const parsedEmployees = JSON.parse(savedEmployees);
+            if (!Array.isArray(parsedEmployees)) {
+                needsRecovery = true;
+                recoveryMessage += '員工資料格式錯誤；';
+            }
+        } catch (error) {
+            needsRecovery = true;
+            recoveryMessage += '員工資料解析錯誤；';
+        }
+    }
+    
+    if (needsRecovery) {
+        console.warn('員工資料需要恢復:', recoveryMessage);
+        
+        // 嘗試從備份恢復
+        const backupEmployees = localStorage.getItem('employees_backup');
+        const backupCounter = localStorage.getItem('employeeCounter_backup');
+        
+        if (backupEmployees && backupCounter) {
+            try {
+                localStorage.setItem('employees', backupEmployees);
+                localStorage.setItem('employeeCounter', backupCounter);
+                console.log('已從備份恢復員工資料');
+                showMessage('員工資料已從備份恢復');
+                return true;
+            } catch (error) {
+                console.error('從備份恢復失敗:', error);
+            }
+        }
+        
+        // 如果沒有備份，顯示警告
+        showMessage('警告：員工資料不完整，建議重新註冊員工或匯入備份檔案');
+        return false;
+    }
+    
+    console.log('員工資料完整性檢查通過');
+    return true;
+}
+
+// 建立員工資料備份
+function createEmployeeDataBackup() {
+    try {
+        const currentEmployees = localStorage.getItem('employees');
+        const currentCounter = localStorage.getItem('employeeCounter');
+        
+        if (currentEmployees) {
+            localStorage.setItem('employees_backup', currentEmployees);
+        }
+        if (currentCounter) {
+            localStorage.setItem('employeeCounter_backup', currentCounter);
+        }
+        
+        console.log('員工資料備份已建立');
+        return true;
+    } catch (error) {
+        console.error('建立員工資料備份失敗:', error);
+        return false;
+    }
 }
 
 // 出貨表相關變數
