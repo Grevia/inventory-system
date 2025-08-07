@@ -506,6 +506,97 @@
         </div>
     </div>
 
+    <!-- 管理員驗證頁面 -->
+    <div id="adminAuthPage" class="page">
+        <div class="header">
+            <h1>管理員驗證</h1>
+            <button id="backToLoginBtn" class="btn-secondary">返回登入</button>
+        </div>
+        
+        <div class="admin-auth-container">
+            <div class="auth-form">
+                <h3>請輸入管理員帳號密碼</h3>
+                <div class="input-group">
+                    <label for="adminUsername">管理員帳號：</label>
+                    <input type="text" id="adminUsername" placeholder="請輸入管理員帳號" required>
+                </div>
+                <div class="input-group">
+                    <label for="adminPassword">管理員密碼：</label>
+                    <input type="password" id="adminPassword" placeholder="請輸入管理員密碼" required>
+                </div>
+                <div class="auth-buttons">
+                    <button id="adminAuthBtn" class="btn-primary">驗證</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 員工註冊頁面 -->
+    <div id="employeeRegisterPage" class="page">
+        <div class="header">
+            <h1>員工資料管理</h1>
+            <button id="backToAdminBtn" class="btn-secondary">返回管理員驗證</button>
+        </div>
+        
+        <div class="employee-register-container">
+            <!-- 員工註冊表單 -->
+            <div class="register-form-section">
+                <h3>新增員工</h3>
+                <div class="register-form">
+                    <div class="input-group">
+                        <label for="generatedEmployeeId">員工編號：</label>
+                        <span id="generatedEmployeeId" class="generated-id">GR00001</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="employeeName">姓名：</label>
+                        <input type="text" id="employeeName" placeholder="請輸入姓名" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="employeePhone">電話：</label>
+                        <input type="tel" id="employeePhone" placeholder="請輸入電話號碼" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="employeeEmail">Email：</label>
+                        <input type="email" id="employeeEmail" placeholder="請輸入Email" required>
+                    </div>
+                    <div class="register-buttons">
+                        <button id="registerEmployeeBtn" class="btn-primary">註冊員工</button>
+                        <button id="clearRegisterBtn" class="btn-secondary">清除資料</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 員工清單 -->
+            <div class="employee-list-section">
+                <h3>員工清單</h3>
+                <div class="employee-list-controls">
+                    <button id="refreshEmployeeListBtn" class="btn-secondary">重新整理清單</button>
+                    <button id="saveEmployeeStatusBtn" class="btn-primary">儲存狀態變更</button>
+                    <button id="exportEmployeesBtn" class="btn-primary">匯出員工資料</button>
+                    <button id="importEmployeesBtn" class="btn-secondary">匯入員工資料</button>
+                    <input type="file" id="importEmployeesFile" accept=".json" style="display: none;">
+                </div>
+                <div class="employee-list-container">
+                    <table id="employeeListTable" class="employee-table">
+                        <thead>
+                            <tr>
+                                <th>員工編號</th>
+                                <th>姓名</th>
+                                <th>電話</th>
+                                <th>Email</th>
+                                <th>註冊日期</th>
+                                <th>狀態</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeListBody">
+                            <!-- 員工資料將在這裡動態載入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- 載入中提示 -->
     <div id="loadingOverlay" class="loading-overlay hidden">
         <div class="loading-spinner"></div>

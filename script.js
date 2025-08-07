@@ -385,6 +385,9 @@ function setupEventListeners() {
     // 員工清單相關按鈕
     const refreshEmployeeListBtn = document.getElementById('refreshEmployeeListBtn');
     const saveEmployeeStatusBtn = document.getElementById('saveEmployeeStatusBtn');
+    const exportEmployeesBtn = document.getElementById('exportEmployeesBtn');
+    const importEmployeesBtn = document.getElementById('importEmployeesBtn');
+    const importEmployeesFile = document.getElementById('importEmployeesFile');
     
     if (refreshEmployeeListBtn) {
         refreshEmployeeListBtn.addEventListener('click', renderEmployeeList);
@@ -394,6 +397,21 @@ function setupEventListeners() {
     if (saveEmployeeStatusBtn) {
         saveEmployeeStatusBtn.addEventListener('click', saveAllEmployeeStatus);
         console.log('儲存員工狀態按鈕事件已設定');
+    }
+    
+    if (exportEmployeesBtn) {
+        exportEmployeesBtn.addEventListener('click', exportEmployees);
+        console.log('匯出員工資料按鈕事件已設定');
+    }
+    
+    if (importEmployeesBtn) {
+        importEmployeesBtn.addEventListener('click', () => importEmployeesFile.click());
+        console.log('匯入員工資料按鈕事件已設定');
+    }
+    
+    if (importEmployeesFile) {
+        importEmployeesFile.addEventListener('change', importEmployees);
+        console.log('匯入員工資料檔案事件已設定');
     }
 
     // 返回功能頁面
@@ -1365,6 +1383,109 @@ function saveAllEmployeeStatus() {
     localStorage.setItem('employees', JSON.stringify(employees));
     
     showMessage('所有員工狀態變更已儲存');
+}
+
+// 匯出員工資料
+function exportEmployees() {
+    console.log('匯出員工資料');
+    
+    if (employees.length === 0) {
+        showMessage('尚無員工資料可匯出');
+        return;
+    }
+    
+    try {
+        // 準備匯出資料
+        const exportData = {
+            version: '1.0',
+            exportDate: new Date().toISOString(),
+            employeeCounter: employeeCounter,
+            employees: employees
+        };
+        
+        // 轉換為 JSON 格式
+        const jsonData = JSON.stringify(exportData, null, 2);
+        
+        // 建立並下載檔案
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', `員工資料備份_${new Date().toISOString().split('T')[0]}.json`);
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        console.log('員工資料匯出成功');
+        showMessage(`成功匯出 ${employees.length} 筆員工資料`);
+        
+    } catch (error) {
+        console.error('匯出員工資料時發生錯誤:', error);
+        showMessage('匯出員工資料失敗：' + error.message);
+    }
+}
+
+// 匯入員工資料
+function importEmployees(event) {
+    console.log('匯入員工資料');
+    
+    const file = event.target.files[0];
+    if (!file) {
+        console.log('沒有選擇檔案');
+        return;
+    }
+    
+    // 檢查檔案類型
+    if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
+        showMessage('請選擇 JSON 格式的檔案');
+        return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const importData = JSON.parse(e.target.result);
+            
+            // 驗證資料格式
+            if (!importData.employees || !Array.isArray(importData.employees)) {
+                throw new Error('檔案格式不正確，缺少員工資料陣列');
+            }
+            
+            // 確認是否要覆蓋現有資料
+            if (employees.length > 0) {
+                const confirmed = confirm(`目前有 ${employees.length} 筆員工資料，匯入將會覆蓋現有資料。\n\n確定要匯入 ${importData.employees.length} 筆員工資料嗎？`);
+                if (!confirmed) {
+                    console.log('用戶取消匯入');
+                    return;
+                }
+            }
+            
+            // 匯入資料
+            employees = importData.employees;
+            employeeCounter = importData.employeeCounter || 1;
+            
+            // 儲存到 localStorage
+            localStorage.setItem('employees', JSON.stringify(employees));
+            
+            // 重新渲染員工清單
+            renderEmployeeList();
+            
+            console.log('員工資料匯入成功');
+            showMessage(`成功匯入 ${employees.length} 筆員工資料`);
+            
+        } catch (error) {
+            console.error('匯入員工資料時發生錯誤:', error);
+            showMessage('匯入員工資料失敗：' + error.message);
+        }
+    };
+    
+    reader.readAsText(file);
+    
+    // 清空檔案輸入，允許重複選擇同一檔案
+    event.target.value = '';
 }
 
 // 出貨表相關變數
