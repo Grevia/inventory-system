@@ -4,8 +4,8 @@ const GOOGLE_SHEETS_CONFIG = {
     SPREADSHEET_ID: '1wJLOHKOrT06CMpuY9X37FhXdQBRCU_gv2KCvJBkMC4k',
     
     // Google Cloud Console 設定
-    API_KEY: 'YOUR_API_KEY_HERE', // 替換為您的 API Key
-    CLIENT_ID: 'YOUR_CLIENT_ID_HERE', // 替換為您的 Client ID
+    API_KEY: 'AIzaSyCBUyP7kE-MJ2Q0zJd4g16xBHbWGt-Ozbw', // 您的 API Key
+    CLIENT_ID: '421445275591-55lksi6gm284nb16af1285lrp3v3ct85.apps.googleusercontent.com', // 您的 Client ID
     
     // 工作表名稱設定
     SHEETS: {
