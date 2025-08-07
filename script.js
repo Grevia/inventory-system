@@ -39,72 +39,11 @@ window.addEventListener('unhandledrejection', function(e) {
     e.preventDefault();
 });
 
-// 全域點擊事件調試
+// 全域點擊事件調試（簡化版）
 document.addEventListener('click', function(e) {
-    console.log('點擊事件:', e.target.tagName, e.target.id, e.target.className);
-    
-    // 檢查是否點擊了按鈕
+    // 只在開發模式下記錄點擊事件
     if (e.target.tagName === 'BUTTON') {
         console.log('按鈕被點擊:', e.target.id, e.target.className);
-        
-        // 檢查按鈕是否有事件監聽器
-        const button = e.target;
-        if (button.onclick === null && !button.hasAttribute('data-has-listener')) {
-            console.warn('按鈕可能沒有事件監聽器:', button.id);
-            
-            // 嘗試手動觸發按鈕功能
-            if (button.id === 'loginBtn') {
-                console.log('嘗試手動觸發登入功能');
-                try {
-                    if (typeof handleLogin === 'function') {
-                        handleLogin();
-                    } else {
-                        console.error('handleLogin 函數未定義');
-                    }
-                } catch (error) {
-                    console.error('執行 handleLogin 時發生錯誤:', error);
-                }
-            } else if (button.id === 'employeeEditBtn') {
-                console.log('嘗試手動觸發員工資料編輯功能');
-                try {
-                    if (typeof showAdminAuth === 'function') {
-                        showAdminAuth();
-                    } else {
-                        console.error('showAdminAuth 函數未定義');
-                        if (typeof showMessage === 'function') {
-                            showMessage('系統錯誤：showAdminAuth 函數未定義');
-                        }
-                    }
-                } catch (error) {
-                    console.error('執行 showAdminAuth 時發生錯誤:', error);
-                    if (typeof showMessage === 'function') {
-                        showMessage('系統錯誤：' + error.message);
-                    }
-                }
-            } else if (button.id === 'adminAuthBtn') {
-                console.log('嘗試手動觸發管理員驗證功能');
-                try {
-                    if (typeof handleAdminAuth === 'function') {
-                        handleAdminAuth();
-                    } else {
-                        console.error('handleAdminAuth 函數未定義');
-                    }
-                } catch (error) {
-                    console.error('執行 handleAdminAuth 時發生錯誤:', error);
-                }
-            } else if (button.id === 'backToLoginBtn') {
-                console.log('嘗試手動觸發返回登入功能');
-                try {
-                    if (typeof showPage === 'function') {
-                        showPage('loginPage');
-                    } else {
-                        console.error('showPage 函數未定義');
-                    }
-                } catch (error) {
-                    console.error('執行 showPage 時發生錯誤:', error);
-                }
-            }
-        }
     }
 });
 
