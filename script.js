@@ -121,6 +121,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// 備用初始化 - 確保在 DOM 完全載入後執行
+window.addEventListener('load', function() {
+    console.log('頁面完全載入，檢查事件監聽器');
+    
+    // 檢查登入按鈕是否存在且有事件監聽器
+    const loginBtn = document.getElementById('loginBtn');
+    const employeeEditBtn = document.getElementById('employeeEditBtn');
+    
+    console.log('頁面載入後檢查 - 登入按鈕:', loginBtn);
+    console.log('頁面載入後檢查 - 員工編輯按鈕:', employeeEditBtn);
+    
+    if (loginBtn && !loginBtn.hasAttribute('data-has-listener')) {
+        console.log('重新設定登入按鈕事件');
+        setupEventListeners();
+    }
+    
+    if (employeeEditBtn && !employeeEditBtn.hasAttribute('data-has-listener')) {
+        console.log('重新設定員工編輯按鈕事件');
+        setupEventListeners();
+    }
+});
+
 // 初始化應用程式
 function initializeApp() {
     console.log('初始化應用程式');
