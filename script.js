@@ -498,8 +498,77 @@ function setupEventListeners() {
     }
     
     if (backToFunctionFromShippingBtn) {
-        backToFunctionFromShippingBtn.addEventListener('click', () => showPage('functionPage'));
+        backToFunctionFromShippingBtn.addEventListener('click', () => {
+            showPage('functionPage');
+        });
         console.log('出貨表返回功能頁面按鈕事件已設定');
+    }
+    
+    // 開箱明細相關按鈕
+    const searchUnboxingPoBtn = document.getElementById('searchUnboxingPoBtn');
+    const submitUnboxingBtn = document.getElementById('submitUnboxingBtn');
+    const clearUnboxingFormBtn = document.getElementById('clearUnboxingFormBtn');
+    const backToFunctionFromUnboxingBtn = document.getElementById('backToFunctionFromUnboxingBtn');
+    
+    if (searchUnboxingPoBtn) {
+        searchUnboxingPoBtn.addEventListener('click', searchUnboxingPoNumber);
+        console.log('查詢開箱採購單號按鈕事件已設定');
+    }
+    
+    if (submitUnboxingBtn) {
+        submitUnboxingBtn.addEventListener('click', submitUnboxingDetails);
+        console.log('提交開箱明細按鈕事件已設定');
+    }
+    
+    if (clearUnboxingFormBtn) {
+        clearUnboxingFormBtn.addEventListener('click', clearUnboxingForm);
+        console.log('清除開箱表單按鈕事件已設定');
+    }
+    
+    if (backToFunctionFromUnboxingBtn) {
+        backToFunctionFromUnboxingBtn.addEventListener('click', () => {
+            showPage('functionPage');
+        });
+        console.log('開箱明細返回功能頁面按鈕事件已設定');
+    }
+    
+    // 功能頁面導航按鈕事件監聽器
+    const functionCards = document.querySelectorAll('.function-card');
+    functionCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // 檢查是否為禁用狀態
+            if (this.classList.contains('disabled')) {
+                showMessage('此功能尚未開放');
+                return;
+            }
+            
+            // 根據卡片內容判斷要導航到哪個頁面
+            const cardText = this.querySelector('h3').textContent;
+            console.log('功能卡片被點擊:', cardText);
+            
+            switch (cardText) {
+                case '點到貨':
+                    navigateToReceiving();
+                    break;
+                case '匯入採購到貨':
+                    navigateToImport();
+                    break;
+                case '出貨表':
+                    navigateToShipping();
+                    break;
+                case '開箱明細':
+                    navigateToUnboxing();
+                    break;
+                default:
+                    showMessage('此功能尚未開放');
+                    break;
+            }
+        });
+    });
+        console.log('功能頁面導航按鈕事件已設定');
     }
     
     // 開箱明細相關按鈕
@@ -527,6 +596,44 @@ function setupEventListeners() {
         backToFunctionFromUnboxingBtn.addEventListener('click', () => showPage('functionPage'));
         console.log('開箱明細返回功能頁面按鈕事件已設定');
     }
+    
+    // 功能頁面導航按鈕事件監聽器
+    const functionCards = document.querySelectorAll('.function-card');
+    functionCards.forEach(card => {
+        card.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // 檢查是否為禁用狀態
+            if (this.classList.contains('disabled')) {
+                showMessage('此功能尚未開放');
+                return;
+            }
+            
+            // 根據卡片內容判斷要導航到哪個頁面
+            const cardText = this.querySelector('h3').textContent;
+            console.log('功能卡片被點擊:', cardText);
+            
+            switch (cardText) {
+                case '點到貨':
+                    navigateToReceiving();
+                    break;
+                case '匯入採購到貨':
+                    navigateToImport();
+                    break;
+                case '出貨表':
+                    navigateToShipping();
+                    break;
+                case '開箱明細':
+                    navigateToUnboxing();
+                    break;
+                default:
+                    showMessage('此功能尚未開放');
+                    break;
+            }
+        });
+    });
+    console.log('功能頁面導航按鈕事件已設定');
 
     // 訊息關閉
     const messageCloseBtn = document.getElementById('messageCloseBtn');
