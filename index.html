@@ -20,8 +20,8 @@
                     <input type="text" id="employeeId" placeholder="請輸入員工編號" maxlength="10">
                 </div>
                 <div class="login-buttons">
-                    <button id="loginBtn" class="btn-primary">登入</button>
-                    <button id="employeeEditBtn" class="btn-secondary">員工資料編輯</button>
+                    <button id="loginBtn" class="btn-primary" onclick="console.log('登入按鈕點擊'); if(typeof handleLogin === 'function') { handleLogin(); } else { alert('系統錯誤：handleLogin 函數未定義'); }">登入</button>
+                    <button id="employeeEditBtn" class="btn-secondary" onclick="console.log('員工資料編輯按鈕點擊'); if(typeof showAdminAuth === 'function') { showAdminAuth(); } else { alert('系統錯誤：showAdminAuth 函數未定義'); }">員工資料編輯</button>
                 </div>
             </div>
         </div>
